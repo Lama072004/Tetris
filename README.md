@@ -88,4 +88,4 @@ Ziel ist die Anwendung **objektorientierter Prinzipien in C** auf einem Embedded
 
 ## 🧾 Lizenz
 
-Dieses Projekt steht unter einer freien Lizenz (z. B. MIT oder GPL – anpassen nach Bedarf).
+Dieses Projekt steht unter einer freien Lizenz.
