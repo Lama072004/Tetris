@@ -1,3 +1,5 @@
+/*
+
 #include "Globals.h"
 #include "Blocks.h"
 #include "Grid.h"
@@ -426,3 +428,6 @@ void game_loop_task(void *pvParameters){
 void start_game_loop(void){
     xTaskCreate(game_loop_task,"GameLoopTask",4096,NULL,5,NULL);
 }
+
+
+*/

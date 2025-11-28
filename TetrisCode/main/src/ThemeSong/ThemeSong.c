@@ -13,6 +13,7 @@ static const char *TAG = "ThemeSong";
 /* --------------------------------------------------------------------------
    NOTE DEFINITIONS (frequencies in Hz)
    ------------------------------------------------------------------------ */
+#define Pause 1
 #define C2  65
 #define CS2 69
 #define D2  73
@@ -52,6 +53,19 @@ static const char *TAG = "ThemeSong";
 #define AS4 466
 #define B4  494
 
+#define C5  523
+#define CS5 554
+#define D5  587
+#define DS5 622
+#define E5  659
+#define F5  698
+#define FS5 740
+#define G5  784
+#define GS5 831
+#define A5  880
+#define AS5 932
+#define B5  988
+
 /* --------------------------------------------------------------------------
    Score
    ------------------------------------------------------------------------ */
@@ -61,12 +75,26 @@ static const buzzer_musical_score_t score[] = {
     {C4, 250*SPEED}, {E4, 500*SPEED}, {D4, 250*SPEED}, {C4, 250*SPEED},
     {B3, 500*SPEED}, {B3, 250*SPEED}, {C4, 250*SPEED}, {D4, 500*SPEED},
     {E4, 500*SPEED}, {C4, 500*SPEED}, {A3, 500*SPEED}, {A3, 500*SPEED},
-    {0, 500*SPEED},
+    {Pause, 1000*SPEED},
     {D4, 750*SPEED}, {F4, 250*SPEED}, {A4, 500*SPEED}, {G4, 250*SPEED},
     {F4, 250*SPEED}, {E4, 750*SPEED}, {C4, 250*SPEED}, {E4, 500*SPEED},
     {D4, 250*SPEED}, {C4, 250*SPEED}, {B3, 500*SPEED}, {B3, 250*SPEED},
     {C4, 250*SPEED}, {D4, 500*SPEED}, {E4, 500*SPEED}, {C4, 500*SPEED},
     {A3, 500*SPEED}, {A3, 500*SPEED},
+    {Pause, 500*SPEED},{Pause, 1000*SPEED},
+
+    {E5, 500*SPEED}, {B4, 250*SPEED}, {C5, 250*SPEED}, {D5, 500*SPEED},
+    {C5, 250*SPEED}, {B4, 250*SPEED}, {A4, 500*SPEED}, {A4, 250*SPEED},
+    {C5, 250*SPEED}, {E5, 500*SPEED}, {D5, 250*SPEED}, {C5, 250*SPEED},
+    {B4, 500*SPEED}, {B4, 250*SPEED}, {C5, 250*SPEED}, {D5, 500*SPEED},
+    {E5, 500*SPEED}, {C5, 500*SPEED}, {A4, 500*SPEED}, {A4, 500*SPEED},
+    {Pause, 1000*SPEED},
+    {D5, 750*SPEED}, {F5, 250*SPEED}, {A5, 500*SPEED}, {G5, 250*SPEED},
+    {F5, 250*SPEED}, {E5, 750*SPEED}, {C5, 250*SPEED}, {E5, 500*SPEED},
+    {D5, 250*SPEED}, {C5, 250*SPEED}, {B4, 500*SPEED}, {B4, 250*SPEED},
+    {C5, 250*SPEED}, {D5, 500*SPEED}, {E5, 500*SPEED}, {C5, 500*SPEED},
+    {A4, 500*SPEED}, {A4, 500*SPEED},
+    {Pause, 500*SPEED},{Pause, 1000*SPEED},
 };
 
 /* --------------------------------------------------------------------------
