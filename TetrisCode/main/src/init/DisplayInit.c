@@ -14,27 +14,6 @@
 #include "esp_lcd_panel_vendor.h"
 #include <stdio.h>
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-// PIN CONFIGURATION
-//////////////////////////////////////////////////////////////////////////////////////////////////
-// I2C Pins (VCC wird extern angesteckt):
-// SCL = GPIO20
-// SDA = GPIO21
-#define I2C_SDA_PIN                     21
-#define I2C_SCL_PIN                     20
-#define I2C_MASTER_NUM                  I2C_NUM_0
-#define I2C_MASTER_FREQ_HZ              (400 * 1000)
-
-#define EXAMPLE_I2C_HW_ADDR             0x3C
-#define I2C_HOST                        0
-#define EXAMPLE_PIN_NUM_RST             -1
-
-#define EXAMPLE_LCD_H_RES               128
-#define EXAMPLE_LCD_V_RES               64
-
-#define EXAMPLE_LCD_CMD_BITS            8
-#define EXAMPLE_LCD_PARAM_BITS          8
-
 static const char *TAG = "TetrisDisplay";
 lv_disp_t *g_disp = NULL;
 static lv_obj_t *label_score = NULL;
@@ -120,10 +99,10 @@ void display_init(void) {
     // Initialize LCD panel IO
     esp_lcd_panel_io_handle_t io_handle = NULL;
     esp_lcd_panel_io_i2c_config_t io_config = {
-        .dev_addr = EXAMPLE_I2C_HW_ADDR,
+        .dev_addr = OLED_I2C_ADDRESS,
         .control_phase_bytes = 1,
-        .lcd_cmd_bits = EXAMPLE_LCD_CMD_BITS,
-        .lcd_param_bits = EXAMPLE_LCD_CMD_BITS,
+        .lcd_cmd_bits = OLED_LCD_CMD_BITS,
+        .lcd_param_bits = OLED_LCD_CMD_BITS,
         .dc_bit_offset = 6,
     };
     esp_err_t ret = esp_lcd_new_panel_io_i2c(I2C_HOST, &io_config, &io_handle);
@@ -137,12 +116,12 @@ void display_init(void) {
     esp_lcd_panel_handle_t panel_handle = NULL;
     esp_lcd_panel_dev_config_t panel_config = {
         .bits_per_pixel = 1,
-        .reset_gpio_num = EXAMPLE_PIN_NUM_RST,
+        .reset_gpio_num = OLED_PIN_NUM_RST,
     };
 
     #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5,3,0))
     esp_lcd_panel_ssd1306_config_t ssd1306_config = {
-        .height = EXAMPLE_LCD_V_RES,
+        .height = OLED_LCD_V_RES,
     };
     panel_config.vendor_config = &ssd1306_config;
     #endif
@@ -185,10 +164,10 @@ void display_init(void) {
     const lvgl_port_display_cfg_t disp_cfg = {
         .io_handle = io_handle,
         .panel_handle = panel_handle,
-        .buffer_size = EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES,
+        .buffer_size = OLED_LCD_H_RES * OLED_LCD_V_RES,
         .double_buffer = true,
-        .hres = EXAMPLE_LCD_H_RES,
-        .vres = EXAMPLE_LCD_V_RES,
+        .hres = OLED_LCD_H_RES,
+        .vres = OLED_LCD_V_RES,
         .monochrome = true,
         .rotation = {
             .swap_xy = false,

@@ -3,13 +3,9 @@
 
 #include <stdbool.h>
 #include "driver/gpio.h"
+#include "Globals.h"
 // TickType_t is defined in FreeRTOS headers
 #include "freertos/FreeRTOS.h"
-
-#define BTN_LEFT    GPIO_NUM_4
-#define BTN_RIGHT   GPIO_NUM_5
-#define BTN_ROTATE  GPIO_NUM_6
-#define BTN_FASTER  GPIO_NUM_7
 
 void init_controls(void);
 // Non-blocking: try to get a button event from ISR queue. Returns true if event available.

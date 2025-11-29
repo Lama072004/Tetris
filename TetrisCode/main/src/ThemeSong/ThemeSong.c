@@ -3,10 +3,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "Globals.h"
 
-#define RMT_BUZZER_RESOLUTION_HZ 1000000
-#define RMT_BUZZER_GPIO_NUM      14
-#define SPEED 0.75
+#define SPEED THEME_SONG_SPEED
 
 static const char *TAG = "ThemeSong";
 
@@ -107,7 +106,7 @@ static void ThemeTask(void *arg) {
     rmt_channel_handle_t buzzer_chan = NULL;
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src = RMT_CLK_SRC_DEFAULT,
-        .gpio_num = RMT_BUZZER_GPIO_NUM,
+        .gpio_num = BUZZER_GPIO_PIN,
         .mem_block_symbols = 64,
         .resolution_hz = RMT_BUZZER_RESOLUTION_HZ,
         .trans_queue_depth = 10,

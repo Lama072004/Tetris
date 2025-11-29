@@ -33,14 +33,6 @@ static QueueHandle_t s_button_queue = NULL;
 /** @brief ISR-Handler für Button-Events (läuft im IRAM für schnellen Zugriff) */
 static void IRAM_ATTR gpio_isr_handler(void* arg);
 
-// ============================================================================
-// GPIO PIN DEFINITIONS
-// ============================================================================
-
-#define BTN_LEFT    GPIO_NUM_4   // Linke Bewegung
-#define BTN_RIGHT   GPIO_NUM_5   // Rechte Bewegung  
-#define BTN_ROTATE  GPIO_NUM_6   // Block rotieren
-#define BTN_FASTER  GPIO_NUM_7   // Schneller fallen lassen
 /**
  * @brief Initialisiert das Button-Control-System
  * 

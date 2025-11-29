@@ -80,18 +80,18 @@ void grid_clear_full_rows(void) {
 
     if (remove_count == 0) return;
 
-    // Blink all to-be-removed rows simultaneously (2x white)
-    for (int blink = 0; blink < 2; blink++) {
-        // On: set all removed-row pixels to white
+    // Blink all to-be-removed rows simultaneously
+    for (int blink = 0; blink < LINE_CLEAR_BLINK_TIMES; blink++) {
+        // On: set all removed-row pixels to configured color
         for (int r = 0; r < remove_count; r++) {
             int y = remove_rows[r];
             for (int x = 0; x < GRID_WIDTH; x++) {
                 int led = ledMatrix.LED_Number[y][x];
-                led_strip_set_pixel(led_strip, led, 255, 255, 255);
+                led_strip_set_pixel(led_strip, led, LINE_CLEAR_BLINK_R, LINE_CLEAR_BLINK_G, LINE_CLEAR_BLINK_B);
             }
         }
         led_strip_refresh(led_strip);
-        vTaskDelay(pdMS_TO_TICKS(150));
+        vTaskDelay(pdMS_TO_TICKS(LINE_CLEAR_BLINK_ON_MS));
 
         // Off: restore static pixels for those positions based on grid
         for (int r = 0; r < remove_count; r++) {
@@ -108,7 +108,7 @@ void grid_clear_full_rows(void) {
             }
         }
         led_strip_refresh(led_strip);
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(LINE_CLEAR_BLINK_OFF_MS));
     }
 
     // Now remove rows: clear those rows and apply gravity so that all blocks above fall down

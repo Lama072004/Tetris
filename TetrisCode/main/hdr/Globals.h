@@ -4,12 +4,33 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "led_strip.h"
+#include "driver/gpio.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// MATRIX CONFIGURATION
+// GPIO PIN CONFIGURATION
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// LED Matrix (WS2812B) Pin
+#define LED_GPIO_PIN   GPIO_NUM_1
+
+// Button Pins (Pull-up, active-LOW)
+#define BTN_LEFT       GPIO_NUM_4   // Linke Bewegung
+#define BTN_RIGHT      GPIO_NUM_5   // Rechte Bewegung
+#define BTN_ROTATE     GPIO_NUM_6   // Block rotieren
+#define BTN_FASTER     GPIO_NUM_7   // Schneller fallen lassen
+
+// Buzzer/Speaker Pin (RMT)
+#define BUZZER_GPIO_PIN GPIO_NUM_14
+
+// I2C Pins für OLED Display (SSD1306)
+#define I2C_SDA_PIN    GPIO_NUM_21
+#define I2C_SCL_PIN    GPIO_NUM_20
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// LED MATRIX HARDWARE CONFIGURATION
 //////////////////////////////////////////////////////////////////////////////////////////////////
 #define LED_WIDTH 16
 #define LED_HEIGHT 24
+#define LED_STRIP_NUM_LEDS (LED_WIDTH * LED_HEIGHT)  // 384 LEDs total
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // GAME TIMING CONFIGURATION (all in milliseconds)
@@ -28,6 +49,27 @@
 
 // Splash scroll delay between frames
 #define SPLASH_SCROLL_DELAY_MS 40
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// I2C & OLED DISPLAY CONFIGURATION (SSD1306)
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// I2C Bus Configuration
+#define I2C_MASTER_NUM         I2C_NUM_0
+#define I2C_MASTER_FREQ_HZ     (400 * 1000)  // 400 kHz Fast Mode
+
+// OLED Display Settings
+#define OLED_I2C_ADDRESS       0x3C
+#define OLED_LCD_H_RES         128
+#define OLED_LCD_V_RES         64
+#define OLED_LCD_CMD_BITS      8
+#define OLED_LCD_PARAM_BITS    8
+#define OLED_PIN_NUM_RST       -1  // No hardware reset pin
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// BUZZER/SPEAKER CONFIGURATION (RMT)
+//////////////////////////////////////////////////////////////////////////////////////////////////
+#define RMT_BUZZER_RESOLUTION_HZ  1000000  // 1 MHz resolution
+#define THEME_SONG_SPEED          0.75     // Speed multiplier for music
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // DISPLAY BRIGHTNESS CONFIGURATION
@@ -51,6 +93,14 @@
 
 // Number of times to blink on Game Over
 #define GAME_OVER_BLINK_COUNT 3
+
+// Line Clear Animation Settings
+#define LINE_CLEAR_BLINK_TIMES 2
+#define LINE_CLEAR_BLINK_ON_MS 150
+#define LINE_CLEAR_BLINK_OFF_MS 150
+#define LINE_CLEAR_BLINK_R 128
+#define LINE_CLEAR_BLINK_G 128
+#define LINE_CLEAR_BLINK_B 128
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // INPUT DEBOUNCING

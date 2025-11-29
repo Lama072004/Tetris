@@ -4,9 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "Blocks.h"
-
-#define GRID_WIDTH 16
-#define GRID_HEIGHT 24
+#include "Globals.h"
 
 extern uint8_t grid[GRID_HEIGHT][GRID_WIDTH];
 

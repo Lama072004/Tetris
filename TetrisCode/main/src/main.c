@@ -36,12 +36,6 @@ In dem Ordner src befinden sich alle .c Dateien und in dem Ordner hdr alle .h Da
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define LED_GPIO   1
-#define LED_WIDTH 16
-#define LED_HEIGHT 24
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Globale Matrix, damit alle Funktionen darauf zugreifen können
 MATRIX ledMatrix;
 led_strip_handle_t led_strip;
@@ -50,8 +44,8 @@ led_strip_handle_t led_strip;
 
 void setup_led_strip() {
     led_strip_config_t strip_config = {
-        .strip_gpio_num = LED_GPIO,
-        .max_leds = LED_HEIGHT * LED_WIDTH,
+        .strip_gpio_num = LED_GPIO_PIN,
+        .max_leds = LED_STRIP_NUM_LEDS,
     };
 
     led_strip_rmt_config_t rmt_config = {
