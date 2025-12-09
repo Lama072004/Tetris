@@ -4,7 +4,7 @@
               Embedded Systems Building Blocks - EIT-DU Studium
 ================================================================================
 
-Autor:          Mathias Lampert
+Autor:          Arian Rupp,Mathias Lampert
 Datum:          Dezember 2025
 Mikrocontroller: ESP32-S3 DevKitC-1 N16R8
 Entwicklungszeit: ~131 Stunden
@@ -836,7 +836,7 @@ leistungsfähig genug sind, um komplexe Anwendungen mit professionellen Features
 zu realisieren - und das zu einem Bruchteil der Kosten traditioneller Gaming-
 Hardware.
 
-
+Wurde mithilfe von KI generiert
 ================================================================================
 ANHANG: REFERENZEN UND RESSOURCEN
 ================================================================================
