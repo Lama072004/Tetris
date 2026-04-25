@@ -209,84 +209,103 @@ void display_init(void) {
 // UPDATE FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void display_update_score(uint32_t current_score, uint32_t highscore) {
+    // KONSISTENTE NULL-CHECK: Display vor Zugriff prüfen (FEHLER BEHOBEN)
+    // Vorher: War inconsistent, teilweise ohne Check
     if (!g_disp) return;  // Display not available, skip
+    
+    if (!lvgl_port_lock(0)) {
+        printf("[Display] ERROR: LVGL lock timeout\n");
+        return;  // Timeout - vermeide Deadlock
+    }
     
     // If labels were removed (e.g. after Game Over), recreate the HUD
     if (label_score == NULL || label_highscore == NULL) {
-        if (lvgl_port_lock(0)) {
-            lv_obj_t *scr = lv_disp_get_scr_act(g_disp);
-            // recreate title and score/highscore labels only if missing
-            if (label_title == NULL) {
-                label_title = lv_label_create(scr);
-                lv_label_set_text(label_title, "TETRIS");
-                lv_obj_align(label_title, LV_ALIGN_TOP_MID, 0, 0);
-            }
+        lv_obj_t *scr = lv_disp_get_scr_act(g_disp);
+        // recreate title and score/highscore labels only if missing
+        if (label_title == NULL) {
+            label_title = lv_label_create(scr);
+            lv_label_set_text(label_title, "TETRIS");
+            lv_obj_align(label_title, LV_ALIGN_TOP_MID, 0, 0);
+        }
 
-            if (label_score == NULL) {
-                label_score = lv_label_create(scr);
-                lv_label_set_text(label_score, "Score: 0");
-                lv_obj_align(label_score, LV_ALIGN_TOP_MID, 0, 20);
-            }
+        if (label_score == NULL) {
+            label_score = lv_label_create(scr);
+            lv_label_set_text(label_score, "Score: 0");
+            lv_obj_align(label_score, LV_ALIGN_TOP_MID, 0, 20);
+        }
 
-            if (label_highscore == NULL) {
-                label_highscore = lv_label_create(scr);
-                lv_label_set_text(label_highscore, "High: 0");
-                lv_obj_align(label_highscore, LV_ALIGN_TOP_MID, 0, 40);
-            }
-
-            lvgl_port_unlock();
+        if (label_highscore == NULL) {
+            label_highscore = lv_label_create(scr);
+            lv_label_set_text(label_highscore, "High: 0");
+            lv_obj_align(label_highscore, LV_ALIGN_TOP_MID, 0, 40);
         }
     }
+    
+    // Update score and highscore labels
+    char buf[32];
 
-    if (lvgl_port_lock(0)) {
-        char buf[32];
-
-        // Update current score
-        snprintf(buf, sizeof(buf), "Score: %lu", current_score);
+    // Update current score
+    snprintf(buf, sizeof(buf), "Score: %lu", current_score);
+    if (label_score != NULL) {
         lv_label_set_text(label_score, buf);
-
-        // Update highscore
-        snprintf(buf, sizeof(buf), "High: %lu", highscore);
-        lv_label_set_text(label_highscore, buf);
-
-        lvgl_port_unlock();
     }
+
+    // Update highscore
+    snprintf(buf, sizeof(buf), "High: %lu", highscore);
+    if (label_highscore != NULL) {
+        lv_label_set_text(label_highscore, buf);
+    }
+
+    lvgl_port_unlock();
 }
 
 // Create a fresh screen and build the HUD (title / score / highscore)
 void display_reset_and_show_hud(uint32_t highscore_val) {
+    // KONSISTENTE NULL-CHECK
     if (!g_disp) return;
 
-    if (lvgl_port_lock(0)) {
-        // Create a new screen and load it (removes old objects cleanly)
-        lv_obj_t *new_scr = lv_obj_create(NULL);
-        lv_disp_load_scr(new_scr);
-
-        // Free pointers logically by creating new ones on new screen
-        label_title = lv_label_create(new_scr);
-        lv_label_set_text(label_title, "TETRIS");
-        lv_obj_align(label_title, LV_ALIGN_TOP_MID, 0, 0);
-
-        label_score = lv_label_create(new_scr);
-        lv_label_set_text(label_score, "Score: 0");
-        lv_obj_align(label_score, LV_ALIGN_TOP_MID, 0, 20);
-
-        label_highscore = lv_label_create(new_scr);
-        char buf[32];
-        snprintf(buf, sizeof(buf), "High: %lu", highscore_val);
-        lv_label_set_text(label_highscore, buf);
-        lv_obj_align(label_highscore, LV_ALIGN_TOP_MID, 0, 40);
-
-        lvgl_port_unlock();
+    if (!lvgl_port_lock(0)) {
+        printf("[Display] ERROR: LVGL lock timeout\n");
+        return;  // Timeout
     }
+
+    // Create a new screen and load it (removes old objects cleanly)
+    lv_obj_t *new_scr = lv_obj_create(NULL);
+    lv_disp_load_scr(new_scr);
+
+    // Free pointers logically by creating new ones on new screen
+    label_title = lv_label_create(new_scr);
+    lv_label_set_text(label_title, "TETRIS");
+    lv_obj_align(label_title, LV_ALIGN_TOP_MID, 0, 0);
+
+    label_score = lv_label_create(new_scr);
+    lv_label_set_text(label_score, "Score: 0");
+    lv_obj_align(label_score, LV_ALIGN_TOP_MID, 0, 20);
+
+    label_highscore = lv_label_create(new_scr);
+    char buf[32];
+    snprintf(buf, sizeof(buf), "High: %lu", highscore_val);
+    lv_label_set_text(label_highscore, buf);
+    lv_obj_align(label_highscore, LV_ALIGN_TOP_MID, 0, 40);
+
+    lvgl_port_unlock();
 }
 
 void display_show_game_over(uint32_t final_score, uint32_t highscore) {
+    // KONSISTENTE NULL-CHECK
     if (!g_disp) return;  // Display not available, skip
     
-    if (lvgl_port_lock(0)) {
-        lv_obj_t *scr = lv_disp_get_scr_act(g_disp);
-        
+    if (!lvgl_port_lock(0)) {
+        printf("[Display] ERROR: LVGL lock timeout\n");
+        return;  // Timeout
+    }
+
+    lv_obj_t *scr = lv_disp_get_scr_act(g_disp);
+    if (scr == NULL) {
+        lvgl_port_unlock();
+        return;
+    }
+    
     // Clear screen and create game over message
     lv_obj_clean(scr);
     // mark HUD labels as gone so they get recreated on next update
@@ -294,16 +313,15 @@ void display_show_game_over(uint32_t final_score, uint32_t highscore) {
     label_highscore = NULL;
     label_title = NULL;
         
-        lv_obj_t *label_go = lv_label_create(scr);
-        lv_label_set_text(label_go, "GAME OVER");
-        lv_obj_align(label_go, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_t *label_go = lv_label_create(scr);
+    lv_label_set_text(label_go, "GAME OVER");
+    lv_obj_align(label_go, LV_ALIGN_CENTER, 0, -20);
 
-        lv_obj_t *label_score_go = lv_label_create(scr);
-        char buf[64];
-        snprintf(buf, sizeof(buf), "Score: %lu\nHigh: %lu", final_score, highscore);
-        lv_label_set_text(label_score_go, buf);
-        lv_obj_align(label_score_go, LV_ALIGN_CENTER, 0, 10);
+    lv_obj_t *label_score_go = lv_label_create(scr);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "Score: %lu\nHigh: %lu", final_score, highscore);
+    lv_label_set_text(label_score_go, buf);
+    lv_obj_align(label_score_go, LV_ALIGN_CENTER, 0, 10);
         
-        lvgl_port_unlock();
-    }
+    lvgl_port_unlock();
 }

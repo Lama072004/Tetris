@@ -27,7 +27,25 @@
 static QueueHandle_t s_button_queue = NULL;
 
 // ============================================================================
-// FUNCTION PROTOTYPES
+// HELPER FUNKTIONEN (REDUNDANZEN ELIMINATED)
+// ============================================================================
+
+/**
+ * @brief Helper-Funktion: Button-Name für Logging ermitteln
+ * 
+ * REDUNDANZ ELIMINATED: Button-Name Lookup war vorher in mehreren
+ * Funktionen wiederholt. Jetzt konsolidiert in EINER Stelle!
+ */
+static const char* get_button_name(gpio_num_t gpio) {
+    if (gpio == BTN_LEFT) return "LEFT";
+    else if (gpio == BTN_RIGHT) return "RIGHT";
+    else if (gpio == BTN_ROTATE) return "ROTATE";
+    else if (gpio == BTN_FASTER) return "FASTER";
+    else return "UNKNOWN";
+}
+
+// ============================================================================
+// BUTTON INPUT FUNKTIONEN
 // ============================================================================
 
 /** @brief ISR-Handler für Button-Events (läuft im IRAM für schnellen Zugriff) */
@@ -136,13 +154,8 @@ bool check_button_pressed(gpio_num_t gpio) {
             // Zeitstempel aktualisieren
             last_pressed_time[gpio] = now;
             
-            // Debug-Logging: Button-Namen ermitteln
-            const char *btn_name = "UNKNOWN";
-            if (gpio == BTN_LEFT) btn_name = "LEFT";
-            else if (gpio == BTN_RIGHT) btn_name = "RIGHT";
-            else if (gpio == BTN_ROTATE) btn_name = "ROTATE";
-            else if (gpio == BTN_FASTER) btn_name = "FASTER";
-            printf("[Button] %s pressed (GPIO %d)\n", btn_name, gpio);
+            // Debug-Logging: Button-Namen mit HELPER-FUNKTION ermitteln (REDUNDANZ ELIMINATED)
+            printf("[Button] %s pressed (GPIO %d)\n", get_button_name(gpio), gpio);
             
             return true;
         }

@@ -6,11 +6,14 @@
 #include "led_strip.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include <string.h>
 #include <stdio.h>
 
 extern MATRIX ledMatrix;
 extern led_strip_handle_t led_strip;
+extern SemaphoreHandle_t led_strip_semaphore;
+extern SemaphoreHandle_t score_semaphore;
 
 uint8_t grid[GRID_HEIGHT][GRID_WIDTH] = {0};
 
@@ -40,6 +43,12 @@ bool grid_check_collision(const TetrisBlock *block) {
 }
 
 void grid_fix_block(const TetrisBlock *block) {
+    // SEMAPHOR-SCHUTZ: LED-Strip vor gleichzeitigem Zugriff schützen
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) != pdTRUE) {
+        printf("[Grid] ERROR: LED semaphore timeout in grid_fix_block\n");
+        return;  // Timeout - vermeide Deadlock
+    }
+    
     for (int by = 0; by < 4; by++) {
         for (int bx = 0; bx < 4; bx++) {
             if (block->shape[by][bx]) {
@@ -61,6 +70,10 @@ void grid_fix_block(const TetrisBlock *block) {
     }
     // Commit static pixels now
     led_strip_refresh(led_strip);
+    
+    xSemaphoreGive(led_strip_semaphore);  // Gib Semaphor frei
+    
+    // Score-Update separat schützen
     grid_clear_full_rows();
 }
 
@@ -79,6 +92,12 @@ void grid_clear_full_rows(void) {
     }
 
     if (remove_count == 0) return;
+
+    // SEMAPHOR-SCHUTZ: LED-Strip für alle Operationen schützen
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) != pdTRUE) {
+        printf("[Grid] ERROR: LED semaphore timeout in grid_clear_full_rows\n");
+        return;  // Timeout - vermeide Deadlock
+    }
 
     // Blink all to-be-removed rows simultaneously
     for (int blink = 0; blink < LINE_CLEAR_BLINK_TIMES; blink++) {
@@ -149,13 +168,21 @@ void grid_clear_full_rows(void) {
         }
     }
     led_strip_refresh(led_strip);
+    
+    xSemaphoreGive(led_strip_semaphore);  // Gib LED-Semaphor frei
+    
     vTaskDelay(pdMS_TO_TICKS(100));
 
     // Score and speed update: add points based on number of lines cleared simultaneously
-    // score_add_lines() handles the bonus logic:
-    // 1 line = 100 pts, 2 lines = 300 pts, 3 lines = 500 pts, 4 lines = 800 pts (Tetris!)
-    printf("[Grid] Cleared %d lines!\n", remove_count);
-    score_add_lines(remove_count);
+    // SEMAPHOR-SCHUTZ: Score und Speed mit Semaphoren schützen
+    if (xSemaphoreTake(score_semaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        printf("[Grid] Cleared %d lines!\n", remove_count);
+        score_add_lines(remove_count);
+        xSemaphoreGive(score_semaphore);
+    } else {
+        printf("[Grid] ERROR: Score semaphore timeout\n");
+    }
+    
     speed_manager_update_score(score_get_total_lines_cleared());
     display_update_score(score_get(), score_get_highscore());
 }

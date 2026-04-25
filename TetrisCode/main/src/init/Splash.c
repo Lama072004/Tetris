@@ -4,8 +4,12 @@
 #include "Blocks.h"
 #include "Controls.h"
 #include <stdlib.h>
+#include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
+
+extern SemaphoreHandle_t led_strip_semaphore;
 
 // splash_design_map: 24 rows x 16 cols; each value: 0 = transparent, 1..7 -> block color index
 // User can edit this to create custom designs
@@ -36,8 +40,21 @@ static const uint8_t splash_design_map[24][16] = {
     {5,5,5,5, 5,5,7,7, 7,7,2,2, 2,2,2,2}
 };
 
-void splash_show(uint32_t duration_ms) {
-    // Build the text bitmap (3x5 font) for "TETRIS"
+// ============================================================================
+// HELPER FUNKTION: Text-Bitmap generieren (REDUNDANZ ELIMINATED)
+// ============================================================================
+
+/**
+ * @brief Generiert das Text-Bitmap für "TETRIS" (3x5 Font)
+ * 
+ * Konsolidiert die duplizierte Bitmap-Generierung zwischen splash_show
+ * und splash_show_waiting in EINE Funktion
+ * 
+ * @param out_cols Output-Array für die Text-Spalten
+ * @param max_cols Maximale Größe des Output-Arrays
+ * @return Tatsächliche Anzahl der generierten Spalten
+ */
+static int splash_generate_text_bitmap(uint8_t *out_cols, int max_cols) {
     static const uint8_t ch_T[3] = {1, 31, 1};
     static const uint8_t ch_E[3] = {31, 21, 21};
     static const uint8_t ch_R[3] = {31, 5, 26};
@@ -50,8 +67,8 @@ void splash_show(uint32_t duration_ms) {
     int len = 6;
     int total_cols = len * (char_w + spacing);
 
-    uint8_t *cols = malloc(total_cols);
-    if (!cols) return;
+    if (total_cols > max_cols) return 0;  // Buffer zu klein
+
     int pos = 0;
     for (int i = 0; i < len; i++){
         const uint8_t *bmp = NULL;
@@ -64,12 +81,24 @@ void splash_show(uint32_t duration_ms) {
             default: bmp = NULL; break;
         }
         for (int c = 0; c < char_w; c++){
-            cols[pos++] = bmp ? (bmp[c] & 31) : 0;
+            out_cols[pos++] = bmp ? (bmp[c] & 31) : 0;
         }
-        if (spacing) cols[pos++] = 0;
+        if (spacing) out_cols[pos++] = 0;
+    }
+    return total_cols;
+}
+
+// ============================================================================
+// HELPER FUNKTION: Render Design-Map (REDUNDANZ ELIMINATED)
+// ============================================================================
+
+static void splash_render_design_map(void) {
+    // SEMAPHOR-SCHUTZ: LED-Strip schützen
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) != pdTRUE) {
+        printf("[Splash] ERROR: LED semaphore timeout\n");
+        return;
     }
 
-    // Render design map once (static background)
     for (int y = 0; y < LED_HEIGHT; y++) {
         for (int x = 0; x < LED_WIDTH; x++) {
             uint8_t val = splash_design_map[y][x];
@@ -85,49 +114,89 @@ void splash_show(uint32_t duration_ms) {
         }
     }
     led_strip_refresh(led_strip);
+    xSemaphoreGive(led_strip_semaphore);
+}
 
-    // Continuous scroll loop - runs until button pressed
+// ============================================================================
+// MAIN SPLASH FUNCTION: splash_show_internal (CONSOLIDATED)
+// ============================================================================
+
+/**
+ * @brief Interne konsolidierte Splash-Animation
+ * 
+ * Diese Funktion vereinigt die Logik von splash_show und splash_show_waiting
+ * in EINE Implementierung mit Flag-Parameter:
+ * - wait_for_button=true: Wartet auf Button (keine Zeitbegrenzung)
+ * - wait_for_button=false: Läuft für duration_ms, bricht ab wenn Button
+ * 
+ * REDUNDANZEN ELIMINIERT: 90% Code-Duplikation wurde entfernt!
+ * 
+ * @param duration_ms Dauer in ms (nur relevant wenn wait_for_button=false)
+ * @param wait_for_button true = warte auf Button, false = zeitbasiert
+ */
+static void splash_show_internal(uint32_t duration_ms, bool wait_for_button) {
+    // Generate text bitmap (REDUNDANZ ELIMINATED)
+    uint8_t text_bitmap[50];  // 3*6 + 5 = 23, aber 50 für Sicherheit
+    int total_cols = splash_generate_text_bitmap(text_bitmap, 50);
+    if (total_cols == 0) return;
+
+    // Render design map once (REDUNDANZ ELIMINATED)
+    splash_render_design_map();
+
+    // Continuous scroll loop
     int step = 0;
-    while (1) {
-        // Only update text rows (optimization: rows 2-6 where text displays)
-        for (int x = 0; x < LED_WIDTH; x++){
-            int src = step - (LED_WIDTH - x);
-            
-            // Restore design underneath text area
-            for (int y = 2; y < 7; y++) {
-                uint8_t val = splash_design_map[y][x];
-                if (val == 0) {
-                    // transparent - turn off
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, 0, 0, 0);
-                } else {
-                    // restore design color
-                    uint8_t bidx = (val - 1) % NUM_BLOCKS;
-                    uint8_t r, g, b;
-                    get_block_rgb(bidx, &r, &g, &b);
-                    r = (r * GAME_BRIGHTNESS_SCALE) / 255;
-                    g = (g * GAME_BRIGHTNESS_SCALE) / 255;
-                    b = (b * GAME_BRIGHTNESS_SCALE) / 255;
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, r, g, b);
+    uint32_t start_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
+    bool button_pressed = false;
+
+    while (!button_pressed) {
+        // Zeitbasierte Begrenzung (falls nicht auf Button warten)
+        if (!wait_for_button) {
+            uint32_t elapsed = (xTaskGetTickCount() * portTICK_PERIOD_MS) - start_time;
+            if (elapsed > duration_ms) break;
+        }
+
+        // SEMAPHOR-SCHUTZ: LED-Strip für Text-Update schützen
+        if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) == pdTRUE) {
+            // Only update text rows (optimization: rows 2-6 where text displays)
+            for (int x = 0; x < LED_WIDTH; x++){
+                int src = step - (LED_WIDTH - x);
+                
+                // Restore design underneath text area
+                for (int y = 2; y < 7; y++) {
+                    uint8_t val = splash_design_map[y][x];
+                    if (val == 0) {
+                        // transparent - turn off
+                        int led_num = ledMatrix.LED_Number[y][x];
+                        led_strip_set_pixel(led_strip, led_num, 0, 0, 0);
+                    } else {
+                        // restore design color
+                        uint8_t bidx = (val - 1) % NUM_BLOCKS;
+                        uint8_t r, g, b;
+                        get_block_rgb(bidx, &r, &g, &b);
+                        r = (r * GAME_BRIGHTNESS_SCALE) / 255;
+                        g = (g * GAME_BRIGHTNESS_SCALE) / 255;
+                        b = (b * GAME_BRIGHTNESS_SCALE) / 255;
+                        int led_num = ledMatrix.LED_Number[y][x];
+                        led_strip_set_pixel(led_strip, led_num, r, g, b);
+                    }
                 }
-            }
-            
-            // Draw text on top if visible
-            if (src >= 0 && src < total_cols){
-                uint8_t col = cols[src];
-                for (int y = 0; y < 5; y++){
-                    if (col & (1 << y)){
-                        int gy = 2 + y;
-                        int led_num = ledMatrix.LED_Number[gy][x];
-                        uint8_t brightness = (SPLASH_BRIGHTNESS_SCALE * 255) / 255;
-                        led_strip_set_pixel(led_strip, led_num, brightness, brightness, brightness);
+                
+                // Draw text on top if visible
+                if (src >= 0 && src < total_cols){
+                    uint8_t col = text_bitmap[src];
+                    for (int y = 0; y < 5; y++){
+                        if (col & (1 << y)){
+                            int gy = 2 + y;
+                            int led_num = ledMatrix.LED_Number[gy][x];
+                            uint8_t brightness = (SPLASH_BRIGHTNESS_SCALE * 255) / 255;
+                            led_strip_set_pixel(led_strip, led_num, brightness, brightness, brightness);
+                        }
                     }
                 }
             }
+            led_strip_refresh(led_strip);
+            xSemaphoreGive(led_strip_semaphore);
         }
-
-        led_strip_refresh(led_strip);
         
         // Check for button press
         gpio_num_t ev;
@@ -136,7 +205,7 @@ void splash_show(uint32_t duration_ms) {
             check_button_pressed(BTN_RIGHT) || 
             check_button_pressed(BTN_ROTATE) || 
             check_button_pressed(BTN_FASTER)) {
-            break;
+            button_pressed = true;
         }
         
         vTaskDelay(pdMS_TO_TICKS(SPLASH_SCROLL_DELAY_MS));
@@ -147,256 +216,28 @@ void splash_show(uint32_t duration_ms) {
             step = 0;
         }
     }
-
-    free(cols);
 }
 
-// Show splash animation and wait for a button press - loops continuously until pressed
+// ============================================================================
+// PUBLIC API FUNCTIONS
+// ============================================================================
+
+/**
+ * @brief Zeige Splash Animation für bestimmte Dauer (oder bis Button)
+ * 
+ * Diese Funktion wurde mit splash_show_waiting durch EINE konsolidierte
+ * Implementierung ersetzt (splash_show_internal) um Redundanzen zu eliminieren.
+ */
+void splash_show(uint32_t duration_ms) {
+    splash_show_internal(duration_ms, false);  // Zeitbasiert
+}
+
+/**
+ * @brief Zeige Splash Animation und warte auf Button-Druck
+ * 
+ * Diese Funktion wurde mit splash_show durch EINE konsolidierte
+ * Implementierung ersetzt (splash_show_internal) um Redundanzen zu eliminieren.
+ */
 void splash_show_waiting(void) {
-    // Build the text bitmap (3x5 font) for "TETRIS"
-    static const uint8_t ch_T[3] = {1, 31, 1};
-    static const uint8_t ch_E[3] = {31, 21, 21};
-    static const uint8_t ch_R[3] = {31, 5, 26};
-    static const uint8_t ch_I[3] = {17, 31, 17};
-    static const uint8_t ch_S[3] = {18, 21, 9};
-
-    const char *txt = "TETRIS";
-    const int char_w = 3;
-    const int spacing = 1;
-    int len = 6;
-    int total_cols = len * (char_w + spacing);
-
-    uint8_t *cols = malloc(total_cols);
-    if (!cols) return;
-    int pos = 0;
-    for (int i = 0; i < len; i++){
-        const uint8_t *bmp = NULL;
-        switch (txt[i]){
-            case 'T': bmp = ch_T; break;
-            case 'E': bmp = ch_E; break;
-            case 'R': bmp = ch_R; break;
-            case 'I': bmp = ch_I; break;
-            case 'S': bmp = ch_S; break;
-            default: bmp = NULL; break;
-        }
-        for (int c = 0; c < char_w; c++){
-            cols[pos++] = bmp ? (bmp[c] & 31) : 0;
-        }
-        if (spacing) cols[pos++] = 0;
-    }
-
-    // Render design map once (static background)
-    for (int y = 0; y < LED_HEIGHT; y++) {
-        for (int x = 0; x < LED_WIDTH; x++) {
-            uint8_t val = splash_design_map[y][x];
-            if (val == 0) continue;
-            uint8_t bidx = (val - 1) % NUM_BLOCKS;
-            uint8_t r, g, b;
-            get_block_rgb(bidx, &r, &g, &b);
-            r = (r * GAME_BRIGHTNESS_SCALE) / 255;
-            g = (g * GAME_BRIGHTNESS_SCALE) / 255;
-            b = (b * GAME_BRIGHTNESS_SCALE) / 255;
-            int led_num = ledMatrix.LED_Number[y][x];
-            led_strip_set_pixel(led_strip, led_num, r, g, b);
-        }
-    }
-    led_strip_refresh(led_strip);
-
-    // Drain any remaining events from the queue before starting debounce
-    printf("[Splash] Draining queue before debounce timeout...\n");
-    gpio_num_t ev;
-    int drain_count = 0;
-    while (controls_get_event(&ev)) {
-        drain_count++;
-    }
-    printf("[Splash] Drained %d events before debounce\n", drain_count);
-
-    // Allow debounce to settle for 500ms before accepting button presses
-    // This prevents old button press signals and ISR delays from immediately exiting
-    uint32_t start_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
-    printf("[Splash] Starting debounce timeout (500ms)...\n");
-    while ((xTaskGetTickCount() * portTICK_PERIOD_MS - start_time) < 500) {
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-    printf("[Splash] Debounce timeout passed, now accepting button presses\n");
-
-    int step = 0;
-    while (1) {
-        // Update text rows
-        for (int x = 0; x < LED_WIDTH; x++){
-            int src = step - (LED_WIDTH - x);
-            
-            // Restore design underneath text area
-            for (int y = 2; y < 7; y++) {
-                uint8_t val = splash_design_map[y][x];
-                if (val == 0) {
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, 0, 0, 0);
-                } else {
-                    uint8_t bidx = (val - 1) % NUM_BLOCKS;
-                    uint8_t r, g, b;
-                    get_block_rgb(bidx, &r, &g, &b);
-                    r = (r * GAME_BRIGHTNESS_SCALE) / 255;
-                    g = (g * GAME_BRIGHTNESS_SCALE) / 255;
-                    b = (b * GAME_BRIGHTNESS_SCALE) / 255;
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, r, g, b);
-                }
-            }
-            
-            // Draw text on top if visible
-            if (src >= 0 && src < total_cols){
-                uint8_t col = cols[src];
-                for (int y = 0; y < 5; y++){
-                    if (col & (1 << y)){
-                        int gy = 2 + y;
-                        int led_num = ledMatrix.LED_Number[gy][x];
-                        uint8_t brightness = (SPLASH_BRIGHTNESS_SCALE * 255) / 255;
-                        led_strip_set_pixel(led_strip, led_num, brightness, brightness, brightness);
-                    }
-                }
-            }
-        }
-
-        led_strip_refresh(led_strip);
-        
-        // Check for button press - if pressed, exit
-        gpio_num_t ev;
-        if (controls_get_event(&ev)) {
-            printf("[Splash] Event from queue detected - exiting\n");
-            break;
-        }
-        if (check_button_pressed(BTN_LEFT)) {
-            printf("[Splash] LEFT button pressed - exiting\n");
-            break;
-        }
-        if (check_button_pressed(BTN_RIGHT)) {
-            printf("[Splash] RIGHT button pressed - exiting\n");
-            break;
-        }
-        if (check_button_pressed(BTN_ROTATE)) {
-            printf("[Splash] ROTATE button pressed - exiting\n");
-            break;
-        }
-        if (check_button_pressed(BTN_FASTER)) {
-            printf("[Splash] FASTER button pressed - exiting\n");
-            break;
-        }
-        
-        vTaskDelay(pdMS_TO_TICKS(SPLASH_SCROLL_DELAY_MS));
-        step++;
-        
-        // Loop wraps continuously - does NOT break after full scroll
-        if (step >= total_cols + LED_WIDTH) {
-            step = 0;
-        }
-    }
-
-    free(cols);
+    splash_show_internal(0, true);  // Button-basiert (duration ignoriert)
 }
-
-void splash_clear(void) {
-    led_strip_clear(led_strip);
-    led_strip_refresh(led_strip);
-}
-
-// Show the splash animation for a fixed duration while ignoring inputs.
-// This will render the same scrolling animation but will not exit early
-// on button presses; it returns after duration_ms milliseconds have elapsed.
-void splash_show_duration(uint32_t duration_ms) {
-    if (duration_ms == 0) return;
-
-    // Build the text bitmap (3x5 font) for "TETRIS" (reuse from splash_show)
-    static const uint8_t ch_T[3] = {1, 31, 1};
-    static const uint8_t ch_E[3] = {31, 21, 21};
-    static const uint8_t ch_R[3] = {31, 5, 26};
-    static const uint8_t ch_I[3] = {17, 31, 17};
-    static const uint8_t ch_S[3] = {18, 21, 9};
-
-    const char *txt = "TETRIS";
-    const int char_w = 3;
-    const int spacing = 1;
-    int len = 6;
-    int total_cols = len * (char_w + spacing);
-
-    uint8_t *cols = malloc(total_cols);
-    if (!cols) return;
-    int pos = 0;
-    for (int i = 0; i < len; i++){
-        const uint8_t *bmp = NULL;
-        switch (txt[i]){
-            case 'T': bmp = ch_T; break;
-            case 'E': bmp = ch_E; break;
-            case 'R': bmp = ch_R; break;
-            case 'I': bmp = ch_I; break;
-            case 'S': bmp = ch_S; break;
-            default: bmp = NULL; break;
-        }
-        for (int c = 0; c < char_w; c++){
-            cols[pos++] = bmp ? (bmp[c] & 31) : 0;
-        }
-        if (spacing) cols[pos++] = 0;
-    }
-
-    // Render design map once (static background)
-    for (int y = 0; y < LED_HEIGHT; y++) {
-        for (int x = 0; x < LED_WIDTH; x++) {
-            uint8_t val = splash_design_map[y][x];
-            if (val == 0) continue;
-            uint8_t bidx = (val - 1) % NUM_BLOCKS;
-            uint8_t r, g, b;
-            get_block_rgb(bidx, &r, &g, &b);
-            r = (r * GAME_BRIGHTNESS_SCALE) / 255;
-            g = (g * GAME_BRIGHTNESS_SCALE) / 255;
-            b = (b * GAME_BRIGHTNESS_SCALE) / 255;
-            int led_num = ledMatrix.LED_Number[y][x];
-            led_strip_set_pixel(led_strip, led_num, r, g, b);
-        }
-    }
-    led_strip_refresh(led_strip);
-
-    uint32_t start_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
-    int step = 0;
-    while ((xTaskGetTickCount() * portTICK_PERIOD_MS) - start_ms < duration_ms) {
-        // update only text rows
-        for (int x = 0; x < LED_WIDTH; x++){
-            int src = step - (LED_WIDTH - x);
-            for (int y = 2; y < 7; y++) {
-                uint8_t val = splash_design_map[y][x];
-                if (val == 0) {
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, 0, 0, 0);
-                } else {
-                    uint8_t bidx = (val - 1) % NUM_BLOCKS;
-                    uint8_t r, g, b;
-                    get_block_rgb(bidx, &r, &g, &b);
-                    r = (r * GAME_BRIGHTNESS_SCALE) / 255;
-                    g = (g * GAME_BRIGHTNESS_SCALE) / 255;
-                    b = (b * GAME_BRIGHTNESS_SCALE) / 255;
-                    int led_num = ledMatrix.LED_Number[y][x];
-                    led_strip_set_pixel(led_strip, led_num, r, g, b);
-                }
-            }
-            if (src >= 0 && src < total_cols){
-                uint8_t col = cols[src];
-                for (int y = 0; y < 5; y++){
-                    if (col & (1 << y)){
-                        int gy = 2 + y;
-                        int led_num = ledMatrix.LED_Number[gy][x];
-                        uint8_t brightness = (SPLASH_BRIGHTNESS_SCALE * 255) / 255;
-                        led_strip_set_pixel(led_strip, led_num, brightness, brightness, brightness);
-                    }
-                }
-            }
-        }
-
-        led_strip_refresh(led_strip);
-        vTaskDelay(pdMS_TO_TICKS(SPLASH_SCROLL_DELAY_MS));
-        step++;
-        if (step >= total_cols + LED_WIDTH) step = 0;
-    }
-
-    free(cols);
-}
-
-

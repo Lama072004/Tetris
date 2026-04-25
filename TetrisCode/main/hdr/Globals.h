@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include "led_strip.h"
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // GPIO PIN CONFIGURATION
@@ -143,6 +145,26 @@ typedef struct {
 
 extern MATRIX ledMatrix;
 extern led_strip_handle_t led_strip;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// FREERTOS SYNCHRONIZATION PRIMITIVES
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Semaphore für LED-Strip Zugriff (Schutz vor Race Conditions)
+// Priorität: 6 (höchste), Typ: Binary, Timeout: 50ms
+extern SemaphoreHandle_t led_strip_semaphore;
+
+// Semaphore für Score & Spielfeld-Zugriff
+// Priorität: 4 (mittel), Typ: Binary, Timeout: 100ms
+extern SemaphoreHandle_t score_semaphore;
+
+// Semaphore für SpeedManager-State
+// Priorität: 3 (niedrig), Typ: Binary, Timeout: 10ms
+extern SemaphoreHandle_t speed_semaphore;
+
+// Event-Gruppe für ThemeTask Kontrolle (Pause/Resume)
+extern EventGroupHandle_t theme_event_group;
+#define THEME_RUN_BIT  (1 << 0)
+#define THEME_PAUSE_BIT (1 << 1)
 
 #endif // GLOBALS_H
 

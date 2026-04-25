@@ -17,6 +17,8 @@ In dem Ordner src befinden sich alle .c Dateien und in dem Ordner hdr alle .h Da
 #include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
+#include "freertos/event_groups.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 #include "led_strip.h"
@@ -39,6 +41,14 @@ In dem Ordner src befinden sich alle .c Dateien und in dem Ordner hdr alle .h Da
 // Globale Matrix, damit alle Funktionen darauf zugreifen können
 MATRIX ledMatrix;
 led_strip_handle_t led_strip;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// FREERTOS SYNCHRONIZATION PRIMITIVES - DEFINITIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////
+SemaphoreHandle_t led_strip_semaphore = NULL;
+SemaphoreHandle_t score_semaphore = NULL;
+SemaphoreHandle_t speed_semaphore = NULL;
+EventGroupHandle_t theme_event_group = NULL;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +75,25 @@ void app_main(void){
     // LED Matrix initialisieren
     setup_led_strip();
     LedMatrixInit(LED_HEIGHT, LED_WIDTH, ledMatrix.LED_Number);
+
+    // ========================
+    // FREERTOS SEMAPHORE INIT
+    // ========================
+    // Semaphore für LED-Strip (höchste Priorität)
+    led_strip_semaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(led_strip_semaphore);  // Gibt den Semaphor frei (initially unlocked)
+    
+    // Semaphore für Score-Updates
+    score_semaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(score_semaphore);
+    
+    // Semaphore für SpeedManager
+    speed_semaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(speed_semaphore);
+    
+    // Event-Gruppe für ThemeTask Kontrolle
+    theme_event_group = xEventGroupCreate();
+    xEventGroupSetBits(theme_event_group, THEME_RUN_BIT);  // Startet als RUNNING
 
     // Seed random number generator for random block spawning
     // Use a combination of esp_random() and a static counter to ensure variation across reboots

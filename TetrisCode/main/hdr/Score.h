@@ -19,4 +19,8 @@ uint32_t score_get_total_lines_cleared(void);
 void score_load_highscore(void);
 uint32_t score_get_highscore(void);
 void score_update_highscore(void);
+
+// Cleanup: NVS Handle ordnungsgemäß schließen (verhindert Memory Leak)
+void score_cleanup(void);
+
 #endif // SCORE_H

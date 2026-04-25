@@ -18,11 +18,13 @@
 #include "SpeedManager.h"
 #include "DisplayInit.h"
 #include "Splash.h"
+#include "ThemeSong.h"
 #include "led_strip.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_random.h"
 
 // ============================================================================
@@ -31,6 +33,8 @@
 
 extern MATRIX ledMatrix;           // LED-Matrix Mapping (aus main.c)
 extern led_strip_handle_t led_strip;  // WS2812B Strip Handle
+extern SemaphoreHandle_t led_strip_semaphore;
+extern SemaphoreHandle_t score_semaphore;
 
 // ============================================================================
 // PRIVATE VARIABLEN
@@ -71,9 +75,16 @@ static void wait_for_restart(void);
  * 3. Neuer Block wird an aktueller Position gezeichnet
  * 4. Nur geänderte Pixel werden aktualisiert (kein led_strip_clear!)
  * 
+ * SEMAPHOR-SCHUTZ: LED-Strip mit Binary Semaphore vor Race Conditions geschützt
  * Resultat: Flimmerfreies Rendering bei 60 FPS
  */
 static void render_grid(void) {
+    // SEMAPHOR-SCHUTZ: LED-Strip Zugriff schützen (50ms Timeout)
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) != pdTRUE) {
+        // Timeout: Render überspring dies Frame, um Deadlock zu vermeiden
+        return;
+    }
+    
     // Schritt 1: Restauriere vorherige dynamische Pixel zurück auf statische Farben
     for (int i = 0; i < prev_dynamic_count; i++) {
         int ry = prev_dynamic_pos[i][0];
@@ -127,6 +138,8 @@ static void render_grid(void) {
 
     // Schritt 3: LED-Matrix aktualisieren (RMT sendet Daten an WS2812B)
     led_strip_refresh(led_strip);
+    
+    xSemaphoreGive(led_strip_semaphore);  // Gib Semaphor frei
 }
 
 // ============================================================================
@@ -287,14 +300,16 @@ static void reset_game_state(void) {
 /**
  * @brief Wartet auf Neustart nach Reset oder Game Over
  * 
+ * FIX: Wartet EXPLICIT auf neuen Button-Press, nicht nur auf Release!
+ * Dies verhindert, dass das Spiel automatisch startet wenn Buttons noch gedrückt sind.
+ * 
  * Sequenz:
  * 1. Queue drainieren (alte Events entfernen)
  * 2. Splash 2 Sekunden anzeigen (Inputs ignoriert)
  * 3. Kontinuierliches Queue-Drain während 500ms
- * 4. Warten bis alle Buttons released
- * 5. Interactive Splash (scrollt bis Button gedrückt)
+ * 4. Warten bis ALLE Buttons released
+ * 5. Warten auf NEUEN Button-Press (EXPLIZIT!)
  * 6. Warten auf Button-Release
- * 7. Spiel starten
  */
 static void wait_for_restart(void) {
     gpio_num_t ev;
@@ -322,24 +337,31 @@ static void wait_for_restart(void) {
         vTaskDelay(pdMS_TO_TICKS(10));
     }
     
-    // 4. Warten bis alle Buttons released
-    vTaskDelay(pdMS_TO_TICKS(50));
+    // 4. Warten bis ALLE Buttons released sind
+    printf("[GameLoop] Waiting for ALL buttons to be released...\n");
+    vTaskDelay(pdMS_TO_TICKS(100));
+    int release_count = 0;
     while (check_button_pressed(BTN_LEFT) || check_button_pressed(BTN_RIGHT) ||
            check_button_pressed(BTN_ROTATE) || check_button_pressed(BTN_FASTER)) {
+        release_count++;
         vTaskDelay(pdMS_TO_TICKS(20));
+        if (release_count > 100) {  // Timeout nach 2 Sekunden
+            printf("[GameLoop] WARNING: Button release timeout, continuing...\n");
+            break;
+        }
     }
+    printf("[GameLoop] All buttons released\n");
     
-    // 5. Interactive Splash (wartet auf Button)
-    splash_show_waiting();
+    // 5. EXPLIZIT auf NEUEN Button-Press warten (FIX für Auto-Start Problem)
+    printf("[GameLoop] Waiting for NEW button press to start game...\n");
+    while (!controls_get_event(&ev)) {
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    printf("[GameLoop] Button pressed (GPIO %d), starting game!\n", ev);
+    
+    // 6. Queue drainieren + kurz warten
     vTaskDelay(pdMS_TO_TICKS(50));
-    
-    // 6. Queue drainieren + Warten auf Release
     while (controls_get_event(&ev)) {}
-    vTaskDelay(pdMS_TO_TICKS(50));
-    while (check_button_pressed(BTN_LEFT) || check_button_pressed(BTN_RIGHT) ||
-           check_button_pressed(BTN_ROTATE) || check_button_pressed(BTN_FASTER)) {
-        vTaskDelay(pdMS_TO_TICKS(20));
-    }
 }
 
 // ============================================================================
@@ -384,15 +406,47 @@ void game_loop_task(void *pvParameters) {
         uint32_t current_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
         
         // ====================================================================
-        // EMERGENCY RESET CHECK (4 Buttons gleichzeitig)
+        // SONG WECHSEL: LEFT + RIGHT BUTTONS für 1 Sekunde
         // ====================================================================
         
-        if (controls_all_buttons_pressed()) {
+        if (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+            // 1 Sekunde halten erforderlich (versehentliche Trigger vermeiden)
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            
+            if (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+                // ========================================================
+                // LEFT + RIGHT Song wechseln (funktioniert ÜBERALL: im Spiel UND im Splash)
+                // ========================================================
+                printf("[GameLoop] Song change triggered (LEFT + RIGHT buttons)\n");
+                theme_next_song();
+                printf("[GameLoop] Switched to song #%d\n", theme_get_current_song());
+                
+                // Kurz pausieren für visuelles Feedback
+                theme_pause();
+                vTaskDelay(pdMS_TO_TICKS(200));
+                theme_resume();
+                
+                // Warten bis Buttons released
+                vTaskDelay(pdMS_TO_TICKS(50));
+                while (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+                    vTaskDelay(pdMS_TO_TICKS(20));
+                }
+            }
+        }
+        
+        // ====================================================================
+        // EMERGENCY RESET: Alle 4 Buttons nur im WAIT STATE
+        // ====================================================================
+        
+        if (!game_running && controls_all_buttons_pressed()) {
             // 1 Sekunde halten erforderlich (versehentliche Trigger vermeiden)
             vTaskDelay(pdMS_TO_TICKS(1000));
             
             if (controls_all_buttons_pressed()) {
-                printf("[GameLoop] Emergency reset triggered (all buttons)\n");
+                // ========================================================
+                // NUR WÄHREND WAIT: 4-Button-Combo = Emergency Reset
+                // ========================================================
+                printf("[GameLoop] Emergency reset triggered (all buttons in wait state)\n");
                 
                 // Hard Reset durchführen
                 reset_game_state();
@@ -441,6 +495,9 @@ void game_loop_task(void *pvParameters) {
         // ====================================================================
         
         if (!game_running) {
+            // ✅ Musik abspielen während Splash-Menü
+            theme_resume();
+            
             // Splash-Animation (scrollt endlos bis Button gedrückt)
             splash_show(SPLASH_DURATION_MS);
             
@@ -464,6 +521,7 @@ void game_loop_task(void *pvParameters) {
             reset_game_state();
             spawn_block();
             game_running = true;
+            theme_resume();  // ✅ Musik bleibt laufen im Spiel
             last_fall_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
             last_render_time = last_fall_time;
             continue;

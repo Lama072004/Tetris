@@ -1,6 +1,10 @@
 #include "SpeedManager.h"
 #include "Globals.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include <stdio.h>
+
+extern SemaphoreHandle_t speed_semaphore;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // SPEED PROGRESSION: Basierend auf gecleareten Zeilen
@@ -67,10 +71,22 @@ void speed_manager_init(void) {
 }
 
 uint32_t speed_manager_get_fall_interval(void) {
-    return current_fall_interval;
+    // SEMAPHOR-SCHUTZ: Speed State vor gleichzeitigem Zugriff schützen
+    uint32_t result = current_fall_interval;
+    if (xSemaphoreTake(speed_semaphore, pdMS_TO_TICKS(10)) == pdTRUE) {
+        result = current_fall_interval;
+        xSemaphoreGive(speed_semaphore);
+    }
+    return result;
 }
 
 void speed_manager_update_score(uint32_t lines_cleared) {
+    // SEMAPHOR-SCHUTZ: Speed Update mit Semaphor schützen
+    if (xSemaphoreTake(speed_semaphore, pdMS_TO_TICKS(10)) != pdTRUE) {
+        printf("[SpeedManager] ERROR: Speed semaphore timeout\n");
+        return;
+    }
+    
     uint32_t old_speed = current_fall_interval;
     total_lines_cleared = lines_cleared;  // Grid.c tracked the total, just use it
     update_fall_speed();
@@ -82,6 +98,8 @@ void speed_manager_update_score(uint32_t lines_cleared) {
         printf("[SpeedManager] ⚡ LEVEL UP! Lines: %lu, Speed: %lu ms (was %lu ms)\n", 
                total_lines_cleared, current_fall_interval, old_speed);
     }
+    
+    xSemaphoreGive(speed_semaphore);
 }
 
 void speed_manager_reset(void) {
