@@ -1,6 +1,6 @@
 #include "DisplayInit.h"
 #include "Globals.h"
-#include "driver/i2c.h"
+#include "driver/i2c_master.h"
 #include "driver/gpio.h"
 #include "lvgl.h"
 #include "esp_lvgl_port.h"
@@ -20,34 +20,38 @@ static lv_obj_t *label_score = NULL;
 static lv_obj_t *label_highscore = NULL;
 static lv_obj_t *label_title = NULL;
 
+// Global I2C Bus Handle (for v6.0 API)
+static i2c_master_bus_handle_t i2c_bus_handle = NULL;
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
-// I2C INITIALIZATION
+// I2C INITIALIZATION (ESP-IDF v6.0 API)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 static void scan_i2c_devices(void) {
+    if (i2c_bus_handle == NULL) {
+        ESP_LOGW(TAG, "I2C bus not initialized - skipping device scan");
+        return;
+    }
+    
     ESP_LOGI(TAG, "Scanning I2C bus for devices...");
     uint8_t found_devices = 0;
     
     for (uint8_t addr = 0x08; addr < 0x78; addr++) {
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_READ, true);
-        i2c_master_stop(cmd);
-        esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 50 / portTICK_PERIOD_MS);
-        i2c_cmd_link_delete(cmd);
+        // v6.0 API: Use i2c_master_probe() instead of cmd_link
+        esp_err_t ret = i2c_master_probe(i2c_bus_handle, addr, 50 / portTICK_PERIOD_MS);
         
         if (ret == ESP_OK) {
-            ESP_LOGI(TAG, "Found I2C device at address: 0x%02X", addr);
+            ESP_LOGI(TAG, "✓ Found I2C device at address: 0x%02X", addr);
             found_devices++;
         }
     }
     
     if (found_devices == 0) {
-        ESP_LOGW(TAG, "No I2C devices found! Check wiring: SDA=GPIO%d, SCL=GPIO%d, VCC=3.3V, GND", 
+        ESP_LOGW(TAG, "✗ No I2C devices found! Check wiring: SDA=GPIO%d, SCL=GPIO%d, VCC=3.3V, GND", 
                  I2C_SDA_PIN, I2C_SCL_PIN);
     }
 }
 
-static void init_i2c(void) {
+static esp_err_t init_i2c(void) {
     ESP_LOGI(TAG, "====================================");
     ESP_LOGI(TAG, "I2C Display Debug Information");
     ESP_LOGI(TAG, "====================================");
@@ -58,35 +62,33 @@ static void init_i2c(void) {
     ESP_LOGI(TAG, "      are REQUIRED between SDA/SCL and 3.3V");
     ESP_LOGI(TAG, "====================================");
     
-    // Enable GPIO pull-ups BEFORE i2c_param_config
-    gpio_set_pull_mode(I2C_SDA_PIN, GPIO_PULLUP_ONLY);
-    gpio_set_pull_mode(I2C_SCL_PIN, GPIO_PULLUP_ONLY);
-    
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = I2C_SDA_PIN,
+    // v6.0 API: Create I2C master bus configuration
+    i2c_master_bus_config_t i2c_bus_config = {
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .i2c_port = I2C_NUM_0,
         .scl_io_num = I2C_SCL_PIN,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 50000  // Sehr langsam: 50 kHz für schwache Pull-ups
+        .sda_io_num = I2C_SDA_PIN,
+        .glitch_ignore_cnt = 7,
+        .flags = {
+            .enable_internal_pullup = true
+        }
     };
-    esp_err_t ret = i2c_param_config(I2C_MASTER_NUM, &conf);
+    
+    // Create I2C master bus
+    esp_err_t ret = i2c_new_master_bus(&i2c_bus_config, &i2c_bus_handle);
     if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "I2C param config failed: %s", esp_err_to_name(ret));
-        return;
+        ESP_LOGW(TAG, "I2C master bus creation failed: %s", esp_err_to_name(ret));
+        i2c_bus_handle = NULL;
+        return ret;
     }
     
-    ret = i2c_driver_install(I2C_MASTER_NUM, conf.mode, 0, 0, 0);
-    if (ret != ESP_OK) {
-        ESP_LOGW(TAG, "I2C driver install failed: %s", esp_err_to_name(ret));
-        return;
-    }
-    
-    ESP_LOGI(TAG, "I2C initialized: SDA=GPIO%d, SCL=GPIO%d, Freq=50kHz", I2C_SDA_PIN, I2C_SCL_PIN);
+    ESP_LOGI(TAG, "✓ I2C initialized: SDA=GPIO%d, SCL=GPIO%d, Freq=50kHz", I2C_SDA_PIN, I2C_SCL_PIN);
     
     // Scan for devices
     vTaskDelay(100 / portTICK_PERIOD_MS);
     scan_i2c_devices();
+    
+    return ESP_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,12 @@ static void init_i2c(void) {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void display_init(void) {
     // Initialize I2C
-    init_i2c();
+    esp_err_t ret = init_i2c();
+    if (ret != ESP_OK) {
+        ESP_LOGW(TAG, "I2C initialization failed - display will not work");
+        g_disp = NULL;
+        return;
+    }
 
     // Initialize LCD panel IO
     esp_lcd_panel_io_handle_t io_handle = NULL;
@@ -105,7 +112,9 @@ void display_init(void) {
         .lcd_param_bits = OLED_LCD_CMD_BITS,
         .dc_bit_offset = 6,
     };
-    esp_err_t ret = esp_lcd_new_panel_io_i2c(I2C_HOST, &io_config, &io_handle);
+    
+    // v6.0 API: Use i2c_bus_handle instead of I2C_HOST
+    ret = esp_lcd_new_panel_io_i2c(i2c_bus_handle, &io_config, &io_handle);
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "Failed to create LCD panel IO: %s - display disabled", esp_err_to_name(ret));
         g_disp = NULL;

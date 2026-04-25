@@ -5,6 +5,7 @@
 #include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "Globals.h"
+#include "ThemeSong.h"
 
 extern EventGroupHandle_t theme_event_group;
 
@@ -68,8 +69,18 @@ static const char *TAG = "ThemeSong";
 #define AS5 932
 #define B5  988
 
+#define C6  1047
+#define CS6 1109
+#define D6  1175
+#define E6  1319
+#define FS6 1480
+#define G6  1568
+#define GS6 1661
+#define A6  1760
+#define AS6 1865
+#define B6  1976
 #define DS6 1245
-#define F6 1397
+#define F6  1397
 
 /* --------------------------------------------------------------------------
    Score

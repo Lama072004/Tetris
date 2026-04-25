@@ -50,5 +50,5 @@ direct_dependencies:
 - espressif/led_strip
 - lvgl/lvgl
 manifest_hash: beacdf20ebfc19d16598b648afa15607655785239dbbe4c21924d6813a930c21
-target: esp32
+target: esp32s3
 version: 3.0.0

@@ -2,16 +2,7 @@
 #define THEMESONG_H
 
 #include <stdint.h>
-
-/* --------------------------------------------------------------------------
-   Struktur für eine einzelne Note oder Pause
-   freq_hz = Frequenz der Note in Hz (0 für Pause)
-   duration_ms = Dauer der Note/Pause in Millisekunden
-   ------------------------------------------------------------------------ */
-typedef struct {
-    uint32_t freq_hz;
-    uint32_t duration_ms;
-} buzzer_musical_score_t;
+#include "musical_score_encoder.h"
 
 /* --------------------------------------------------------------------------
    Startet die Tetris-Theme-Melodie wiederholend auf dem Buzzer
@@ -40,15 +31,26 @@ void theme_resume(void);
    Verschiedene verfügbare Melodien können gewechselt werden
    -------------------------------------------------------------------------- */
 
-enum ThemeSongType {
-    THEME_TETRIS = 0,      // Original Tetris Melodie
-    THEME_STARWARS = 1,    // Star Wars Theme
-    THEME_MARIO = 2,       // Super Mario Bros
-    THEME_SILENCE = 3,     // Keine Musik (Pause)
-    THEME_LAST = 4         // Sentinel (um zurück zu TETRIS zu springen)
-};
+/**
+ * Theme Song Indices - Beschreibt alle verfügbaren Melodien
+ * WICHTIG: Diese Reihenfolge MUSS mit dem available_songs[] Array in ThemeSong.c übereinstimmen!
+ */
+typedef enum {
+    THEME_TETRIS = 0,
+    THEME_STARWARS = 1,
+    THEME_CANTINABAND = 2,
+    THEME_IMPERIALMARCH = 3,
+    THEME_MARIO = 4,
+    THEME_ZELDA = 5,
+    THEME_NEVERGONNAGIVEYOUUP = 6,
+    THEME_HARRYPOTTER = 7,
+    THEME_MIICHANNEL = 8,
+    THEME_KEYBOARDCAT = 9,
+    THEME_SILENCE = 10,
+    THEME_COUNT = 11        // Gesamtanzahl der Songs
+} ThemeSongIndex;
 
-/* Wechsele zur nächsten Musik (mit Cycling: TETRIS → STARWARS → MARIO → SILENCE → TETRIS)
+/* Wechsele zur nächsten Musik (mit Cycling: TETRIS → STARWARS → ... → SILENCE → TETRIS)
    Diese Funktion wird durch die Tastenkombination (alle 4 Buttons) aufgerufen */
 void theme_next_song(void);
 

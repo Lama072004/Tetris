@@ -241,3 +241,38 @@ void splash_show(uint32_t duration_ms) {
 void splash_show_waiting(void) {
     splash_show_internal(0, true);  // Button-basiert (duration ignoriert)
 }
+
+/**
+ * @brief Zeige Splash Animation für bestimmte Dauer (ignoriere Inputs komplett)
+ * 
+ * Diese Funktion ist identisch mit splash_show(), zeigt die Animation
+ * aber definitiv für die angegebene Dauer, ohne auf Buttons zu warten.
+ * 
+ * @param duration_ms Dauer in Millisekunden für die Splash-Anzeige
+ */
+void splash_show_duration(uint32_t duration_ms) {
+    splash_show_internal(duration_ms, false);  // Zeitbasiert (Button ignorieren)
+}
+
+/**
+ * @brief Lösche die Splash-Animation von den LEDs
+ * 
+ * Schaltet alle LEDs aus, um den LED-Matrix für das Spiel freizugeben.
+ * Diese Funktion schützt den Zugriff mit dem LED-Strip Semaphor.
+ */
+void splash_clear(void) {
+    // SEMAPHOR-SCHUTZ: LED-Strip für Clear-Operation schützen
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(100)) == pdTRUE) {
+        // Setze alle LEDs auf schwarz (0,0,0)
+        for (int y = 0; y < LED_HEIGHT; y++) {
+            for (int x = 0; x < LED_WIDTH; x++) {
+                int led_num = ledMatrix.LED_Number[y][x];
+                led_strip_set_pixel(led_strip, led_num, 0, 0, 0);
+            }
+        }
+        
+        // Aktualisiere LED-Strip mit schwarzer Matrix
+        led_strip_refresh(led_strip);
+        xSemaphoreGive(led_strip_semaphore);
+    }
+}

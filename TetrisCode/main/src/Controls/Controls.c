@@ -48,8 +48,38 @@ static const char* get_button_name(gpio_num_t gpio) {
 // BUTTON INPUT FUNKTIONEN
 // ============================================================================
 
-/** @brief ISR-Handler für Button-Events (läuft im IRAM für schnellen Zugriff) */
-static void IRAM_ATTR gpio_isr_handler(void* arg);
+/**
+ * @brief ISR-Handler für Button-Events (läuft im Interrupt-Kontext)
+ * 
+ * Dieser Handler wird bei jedem Button-Press getriggert und läuft im IRAM
+ * für minimale Latenz. Die Verarbeitung ist bewusst minimal:
+ * - GPIO-Nummer in Queue pushen
+ * - Context Switch triggern falls höher-prioritärer Task wartet
+ * 
+ * WICHTIG: Keine zeitintensiven Operationen oder Blocking-Calls hier!
+ * Die eigentliche Debouncing-Logik erfolgt im Task-Kontext.
+ * 
+ * @param arg GPIO-Nummer (cast von void*)
+ */
+static void IRAM_ATTR gpio_isr_handler(void* arg)
+{
+    // Queue-Check (sollte nie NULL sein nach init_controls)
+    if (s_button_queue == NULL) return;
+    
+    // GPIO-Nummer aus Argument extrahieren
+    gpio_num_t g = (gpio_num_t)(intptr_t)arg;
+    
+    // Flag für Context Switch
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    
+    // Event in Queue pushen (non-blocking ISR-Version)
+    xQueueSendFromISR(s_button_queue, &g, &xHigherPriorityTaskWoken);
+    
+    // Context Switch durchführen falls höher-prioritärer Task geweckt wurde
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR();
+    }
+}
 
 /**
  * @brief Initialisiert das Button-Control-System
@@ -89,39 +119,6 @@ void init_controls(void) {
     gpio_isr_handler_add(BTN_RIGHT, gpio_isr_handler, (void*)(intptr_t)BTN_RIGHT);
     gpio_isr_handler_add(BTN_ROTATE, gpio_isr_handler, (void*)(intptr_t)BTN_ROTATE);
     gpio_isr_handler_add(BTN_FASTER, gpio_isr_handler, (void*)(intptr_t)BTN_FASTER);
-}
-
-/**
- * @brief ISR-Handler für Button-Events (läuft im Interrupt-Kontext)
- * 
- * Dieser Handler wird bei jedem Button-Press getriggert und läuft im IRAM
- * für minimale Latenz. Die Verarbeitung ist bewusst minimal:
- * - GPIO-Nummer in Queue pushen
- * - Context Switch triggern falls höher-prioritärer Task wartet
- * 
- * WICHTIG: Keine zeitintensiven Operationen oder Blocking-Calls hier!
- * Die eigentliche Debouncing-Logik erfolgt im Task-Kontext.
- * 
- * @param arg GPIO-Nummer (cast von void*)
- */
-static void IRAM_ATTR gpio_isr_handler(void* arg)
-{
-    // Queue-Check (sollte nie NULL sein nach init_controls)
-    if (s_button_queue == NULL) return;
-    
-    // GPIO-Nummer aus Argument extrahieren
-    gpio_num_t g = (gpio_num_t)(intptr_t)arg;
-    
-    // Flag für Context Switch
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    
-    // Event in Queue pushen (non-blocking ISR-Version)
-    xQueueSendFromISR(s_button_queue, &g, &xHigherPriorityTaskWoken);
-    
-    // Context Switch durchführen falls höher-prioritärer Task geweckt wurde
-    if (xHigherPriorityTaskWoken) {
-        portYIELD_FROM_ISR();
-    }
 }
 
 /**
