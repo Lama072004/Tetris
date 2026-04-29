@@ -79,9 +79,12 @@ static void wait_for_restart(void);
  * Resultat: Flimmerfreies Rendering bei 60 FPS
  */
 static void render_grid(void) {
+    //printf("[Render] Rendering frame, current_block at x=%d y=%d\n", current_block.x, current_block.y);
+    
     // SEMAPHOR-SCHUTZ: LED-Strip Zugriff schützen (50ms Timeout)
     if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(50)) != pdTRUE) {
         // Timeout: Render überspring dies Frame, um Deadlock zu vermeiden
+        printf("[Render] Semaphore timeout, skipping frame\n");
         return;
     }
     
@@ -405,15 +408,24 @@ void game_loop_task(void *pvParameters) {
     while (1) {
         uint32_t current_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
         
+        // Lesen der aktuellen Button-Presses einmal pro Schleife.
+        // Vermeidet, dass ein einzelner Druck in mehreren Abfragen verbraucht wird.
+        bool left_pressed = check_button_pressed(BTN_LEFT);
+        bool right_pressed = check_button_pressed(BTN_RIGHT);
+        bool rotate_pressed = check_button_pressed(BTN_ROTATE);
+        bool faster_pressed = check_button_pressed(BTN_FASTER);
+        
         // ====================================================================
         // SONG WECHSEL: LEFT + RIGHT BUTTONS für 1 Sekunde
         // ====================================================================
         
-        if (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+        if (left_pressed && right_pressed) {
             // 1 Sekunde halten erforderlich (versehentliche Trigger vermeiden)
             vTaskDelay(pdMS_TO_TICKS(1000));
             
-            if (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+            // GPIO direkt auslesen statt check_button_pressed() (verbraucht keinen Zustand)
+            // Buttons sind active-LOW: 0 = gedrückt, 1 = released
+            if ((gpio_get_level(BTN_LEFT) == 0 && gpio_get_level(BTN_RIGHT) == 0)) {
                 // ========================================================
                 // LEFT + RIGHT Song wechseln (funktioniert ÜBERALL: im Spiel UND im Splash)
                 // ========================================================
@@ -428,42 +440,51 @@ void game_loop_task(void *pvParameters) {
                 
                 // Warten bis Buttons released
                 vTaskDelay(pdMS_TO_TICKS(50));
-                while (check_button_pressed(BTN_LEFT) && check_button_pressed(BTN_RIGHT)) {
+                while (gpio_get_level(BTN_LEFT) == 0 && gpio_get_level(BTN_RIGHT) == 0) {
                     vTaskDelay(pdMS_TO_TICKS(20));
                 }
             }
         }
         
         // ====================================================================
-        // EMERGENCY RESET: Alle 4 Buttons nur im WAIT STATE
+        // EMERGENCY RESET: ROTATE + FASTER Buttons (funktioniert ÜBERALL)
         // ====================================================================
         
-        if (!game_running && controls_all_buttons_pressed()) {
+        if (rotate_pressed && faster_pressed) {
             // 1 Sekunde halten erforderlich (versehentliche Trigger vermeiden)
             vTaskDelay(pdMS_TO_TICKS(1000));
             
-            if (controls_all_buttons_pressed()) {
+            // GPIO direkt auslesen statt check_button_pressed() (verbraucht keinen Zustand)
+            // Buttons sind active-LOW: 0 = gedrückt, 1 = released
+            if (gpio_get_level(BTN_ROTATE) == 0 && gpio_get_level(BTN_FASTER) == 0) {
                 // ========================================================
-                // NUR WÄHREND WAIT: 4-Button-Combo = Emergency Reset
+                // ROTATE + FASTER = Emergency Reset (im Spiel UND im Splash)
                 // ========================================================
-                printf("[GameLoop] Emergency reset triggered (all buttons in wait state)\n");
+                printf("[GameLoop] Emergency reset triggered (ROTATE + FASTER buttons)\n");
+                
+                // Musik kurz pausieren für Feedback
+                theme_pause();
                 
                 // Hard Reset durchführen
                 reset_game_state();
                 led_strip_clear(led_strip);
                 led_strip_refresh(led_strip);
+                
+                // Musik fortsetzen
+                theme_resume();
+                
+                // Zurück zum WAIT STATE (Splash-Menü)
                 game_running = false;
                 
                 // Neustart-Sequenz
                 wait_for_restart();
                 
-                // Spiel starten
-                splash_clear();
-                reset_game_state();
-                spawn_block();
-                game_running = true;
-                last_fall_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
-                last_render_time = last_fall_time;
+                // Warten bis Buttons released
+                vTaskDelay(pdMS_TO_TICKS(50));
+                while (gpio_get_level(BTN_ROTATE) == 0 || gpio_get_level(BTN_FASTER) == 0) {
+                    vTaskDelay(pdMS_TO_TICKS(20));
+                }
+                
                 continue;
             }
         }
@@ -516,6 +537,8 @@ void game_loop_task(void *pvParameters) {
             controls_wait_event(&ev, portMAX_DELAY);
             vTaskDelay(pdMS_TO_TICKS(50));
             
+            printf("[GameLoop] Button pressed, starting game! GPIO: %d\n", ev);
+            
             // Spiel starten
             splash_clear();
             reset_game_state();
@@ -524,6 +547,7 @@ void game_loop_task(void *pvParameters) {
             theme_resume();  // ✅ Musik bleibt laufen im Spiel
             last_fall_time = xTaskGetTickCount() * portTICK_PERIOD_MS;
             last_render_time = last_fall_time;
+            printf("[GameLoop] Game started, game_running = %d\n", game_running);
             continue;
         }
         
@@ -534,16 +558,20 @@ void game_loop_task(void *pvParameters) {
         TetrisBlock tmp;
         
         // Links-Bewegung
-        if (check_button_pressed(BTN_LEFT)) {
+        if (left_pressed) {
+            printf("[GameLoop] LEFT button detected in RUNNING state\n");
             tmp = current_block;
             tmp.x--;
             if (!grid_check_collision(&tmp)) {
                 current_block = tmp;
+                printf("[GameLoop] Block moved LEFT\n");
+            } else {
+                printf("[GameLoop] LEFT movement blocked by collision\n");
             }
         }
         
         // Rechts-Bewegung
-        if (check_button_pressed(BTN_RIGHT)) {
+        if (right_pressed) {
             tmp = current_block;
             tmp.x++;
             if (!grid_check_collision(&tmp)) {
@@ -552,7 +580,7 @@ void game_loop_task(void *pvParameters) {
         }
         
         // Rotation (O-Block rotiert nicht)
-        if (check_button_pressed(BTN_ROTATE) && current_block.color != 3) {
+        if (rotate_pressed && current_block.color != 3) {
             tmp = current_block;
             rotate_block_90(&tmp);
             if (!grid_check_collision(&tmp)) {
@@ -561,7 +589,7 @@ void game_loop_task(void *pvParameters) {
         }
         
         // Manuelles Fallenlassen (Schneller-Taste)
-        if (check_button_pressed(BTN_FASTER)) {
+        if (faster_pressed) {
             tmp = current_block;
             tmp.y++;
             if (!grid_check_collision(&tmp)) {

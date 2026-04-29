@@ -11,6 +11,42 @@
 
 extern SemaphoreHandle_t led_strip_semaphore;
 
+// ============================================================================
+// INITIALIZATION FUNCTION
+// ============================================================================
+
+/**
+ * @brief Initialize LED state and validate readiness for splash display
+ * 
+ * This function ensures a clean LED state before the splash animation begins:
+ * - Clears all LEDs explicitly
+ * - Validates semaphore availability
+ * - Waits for physical LED update
+ * - Essential for consistent splash display after reset
+ */
+void splash_init(void) {
+    // Attempt to acquire semaphore (must be available)
+    if (xSemaphoreTake(led_strip_semaphore, pdMS_TO_TICKS(100)) != pdTRUE) {
+        printf("[Splash] ERROR: LED semaphore not available during init\n");
+        return;
+    }
+    
+    // Explicit clear and refresh of all LEDs before splash
+    // Ensures no junk data in framebuffer
+    led_strip_clear(led_strip);
+    led_strip_refresh(led_strip);
+    
+    xSemaphoreGive(led_strip_semaphore);
+    
+    // Small delay to ensure physical LED update completes
+    // Critical for consistent display after reset/power-on
+    vTaskDelay(pdMS_TO_TICKS(50));
+}
+
+// ============================================================================
+// SPLASH DESIGN MAP
+// ============================================================================
+
 // splash_design_map: 24 rows x 16 cols; each value: 0 = transparent, 1..7 -> block color index
 // User can edit this to create custom designs
 static const uint8_t splash_design_map[24][16] = {

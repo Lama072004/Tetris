@@ -3,6 +3,15 @@
 
 #include <stdint.h>
 
+/**
+ * @brief Initialize LED state before splash display
+ * 
+ * Clears all LEDs and validates that the LED subsystem is ready.
+ * Must be called before splash_show() to ensure consistent display after reset.
+ * This function is idempotent and safe to call multiple times.
+ */
+void splash_init(void);
+
 // Show the splash animation on the LED matrix. duration_ms controls how long the
 // splash remains visible (use SPLASH_DURATION_MS constant from Globals.h).
 void splash_show(uint32_t duration_ms);

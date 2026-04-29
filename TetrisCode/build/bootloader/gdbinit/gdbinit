@@ -1,2 +1,2 @@
-source /home/mathias/Dokumente/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/bootloader/gdbinit/symbols
-source /home/mathias/Dokumente/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/bootloader/gdbinit/connect
+source D:/Mathias Lampert/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/bootloader/gdbinit/symbols
+source D:/Mathias Lampert/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/bootloader/gdbinit/connect

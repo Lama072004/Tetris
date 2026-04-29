@@ -11,8 +11,11 @@
  * Restrict to simple macros with numeric values, and/or #if/#endif blocks.
  */
 /*
+
  * Automatically generated file. DO NOT EDIT.
- * Espressif IoT Development Framework (ESP-IDF) 6.0.0 Configuration Header
+
+ * Espressif IoT Development Framework (ESP-IDF) 6.0.1 Configuration Header
+
  */
        
 /* List of deprecated options */
@@ -150,7 +153,6 @@ _diram_i_start = 0x40378000;
 _heap_start = _heap_low_start;
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000;
-_data_seg_org = ORIGIN(rtc_data_seg);
 /* RTC fast memory shares the same range for both data and instructions */
 REGION_ALIAS("rtc_data_seg", rtc_iram_seg );
 REGION_ALIAS("rtc_data_location", rtc_slow_seg );

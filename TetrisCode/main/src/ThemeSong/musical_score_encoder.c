@@ -6,6 +6,7 @@
 
 #include "esp_check.h"
 #include "musical_score_encoder.h"
+#include "../hdr/Globals.h"
 
 static const char *TAG = "score_encoder";
 
@@ -23,11 +24,16 @@ static size_t rmt_encode_musical_score(rmt_encoder_t *encoder, rmt_channel_handl
     rmt_encode_state_t session_state = RMT_ENCODING_RESET;
     buzzer_musical_score_t *score = (buzzer_musical_score_t *)primary_data;
     uint32_t rmt_raw_symbol_duration = score_encoder->resolution / score->freq_hz / 2;
+    
+    // Lautstärke über Duty Cycle steuern (BUZZER_VOLUME_PERCENT = 10-90%)
+    uint32_t high_duration = (rmt_raw_symbol_duration * BUZZER_VOLUME_PERCENT) / 100;
+    uint32_t low_duration = rmt_raw_symbol_duration - high_duration;
+    
     rmt_symbol_word_t musical_score_rmt_symbol = {
         .level0 = 0,
-        .duration0 = rmt_raw_symbol_duration,
+        .duration0 = low_duration,
         .level1 = 1,
-        .duration1 = rmt_raw_symbol_duration,
+        .duration1 = high_duration,
     };
     size_t encoded_symbols = copy_encoder->encode(copy_encoder, channel, &musical_score_rmt_symbol, sizeof(musical_score_rmt_symbol), &session_state);
     *ret_state = session_state;

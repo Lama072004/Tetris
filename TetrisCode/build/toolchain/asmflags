@@ -2,4 +2,4 @@
 -fno-builtin-memcpy
 -fno-builtin-memset
 -fno-builtin-bzero
--specs=picolibc.specs
+"-specs=D:/Mathias Lampert/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/specs/picolibc.specs"

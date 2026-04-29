@@ -41,13 +41,10 @@ typedef enum {
     THEME_CANTINABAND = 2,
     THEME_IMPERIALMARCH = 3,
     THEME_MARIO = 4,
-    THEME_ZELDA = 5,
-    THEME_NEVERGONNAGIVEYOUUP = 6,
-    THEME_HARRYPOTTER = 7,
-    THEME_MIICHANNEL = 8,
-    THEME_KEYBOARDCAT = 9,
-    THEME_SILENCE = 10,
-    THEME_COUNT = 11        // Gesamtanzahl der Songs
+    THEME_HARRYPOTTER = 5,
+    THEME_KEYBOARDCAT = 6,
+    THEME_SILENCE = 7,
+    THEME_COUNT = 8        // Gesamtanzahl der Songs
 } ThemeSongIndex;
 
 /* Wechsele zur nächsten Musik (mit Cycling: TETRIS → STARWARS → ... → SILENCE → TETRIS)

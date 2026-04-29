@@ -71,7 +71,8 @@
 // BUZZER/SPEAKER CONFIGURATION (RMT)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 #define RMT_BUZZER_RESOLUTION_HZ  1000000  // 1 MHz resolution
-#define THEME_SONG_SPEED          0.75     // Speed multiplier for music
+#define BUZZER_VOLUME_PERCENT     10        // Lautstärke in Prozent (10-90)
+#define THEME_SONG_SPEED          1.5     // Speed multiplier for music
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // DISPLAY BRIGHTNESS CONFIGURATION

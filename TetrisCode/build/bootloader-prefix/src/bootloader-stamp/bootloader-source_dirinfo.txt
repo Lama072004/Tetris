@@ -4,6 +4,6 @@
 
 method=source_dir
 command=
-source_dir=/home/mathias/esp/v6.0/esp-idf/components/bootloader/subproject
+source_dir=D:/ESP/.espressif/v6.0.1/esp-idf/components/bootloader/subproject
 work_dir=
 

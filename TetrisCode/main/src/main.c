@@ -101,6 +101,10 @@ void app_main(void){
     srand(esp_random() ^ seed_counter);
     seed_counter += 1111;  // Increment for next potential seed
 
+    // Initialize LED state (clear all LEDs, validate semaphore)
+    // Must be called before splash_show() to ensure consistent display after reset
+    splash_init();
+
     // Show splash animation (scrolling text + static doubled blocks)
     splash_show(SPLASH_DURATION_MS);
 

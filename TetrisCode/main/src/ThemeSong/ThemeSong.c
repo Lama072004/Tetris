@@ -16,7 +16,7 @@ static const char *TAG = "ThemeSong";
 /* --------------------------------------------------------------------------
    NOTE DEFINITIONS (frequencies in Hz)
    ------------------------------------------------------------------------ */
-#define Pause 1
+#define Pause 0
 #define C2  65
 #define CS2 69
 #define D2  73
@@ -144,173 +144,108 @@ static const buzzer_musical_score_t score_starwars[] = {
 };
 
 static const buzzer_musical_score_t score_mario[] = {
-    {E5, 250*SPEED}, {E5, 250*SPEED}, {Pause, 250*SPEED}, {E5, 250*SPEED}, {Pause, 250*SPEED}, {C5, 250*SPEED}, {E5, 250*SPEED},
-    {G5, 500*SPEED}, {Pause, 500*SPEED}, {G4, 500*SPEED}, {Pause, 500*SPEED},
-    {C5, 750*SPEED}, {G4, 250*SPEED}, {Pause, 500*SPEED}, {E4, 750*SPEED},
-    {A4, 500*SPEED}, {B4, 500*SPEED}, {AS4, 250*SPEED}, {A4, 500*SPEED},
-    {G4, 375*SPEED}, {E5, 375*SPEED}, {G5, 375*SPEED}, {A5, 500*SPEED}, {F5, 250*SPEED}, {G5, 250*SPEED},
-    {Pause, 250*SPEED}, {E5, 500*SPEED}, {C5, 250*SPEED}, {D5, 250*SPEED}, {B4, 750*SPEED},
+    {E5, 250*SPEED/1.5}, {E5, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {E5, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {C5, 250*SPEED/1.5}, {E5, 250*SPEED/1.5},
+    {G5, 500*SPEED/1.5}, {Pause, 500*SPEED/1.5}, {G4, 500*SPEED/1.5}, {Pause, 500*SPEED/1.5},
+    {C5, 750*SPEED/1.5}, {G4, 250*SPEED/1.5}, {Pause, 500*SPEED/1.5}, {E4, 750*SPEED/1.5},
+    {A4, 500*SPEED/1.5}, {B4, 500*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {A4, 500*SPEED/1.5},
+    {G4, 375*SPEED/1.5}, {E5, 375*SPEED/1.5}, {G5, 375*SPEED/1.5}, {A5, 500*SPEED/1.5}, {F5, 250*SPEED/1.5}, {G5, 250*SPEED/1.5},
+    {Pause, 250*SPEED/1.5}, {E5, 500*SPEED/1.5}, {C5, 250*SPEED/1.5}, {D5, 250*SPEED/1.5}, {B4, 750*SPEED/1.5},
 
-    {C5, 750*SPEED}, {G4, 250*SPEED}, {Pause, 500*SPEED}, {E4, 750*SPEED},
-    {A4, 500*SPEED}, {B4, 500*SPEED}, {AS4, 250*SPEED}, {A4, 500*SPEED},
-    {G4, 375*SPEED}, {E5, 375*SPEED}, {G5, 375*SPEED}, {A5, 500*SPEED}, {F5, 250*SPEED}, {G5, 250*SPEED},
-    {Pause, 250*SPEED}, {E5, 500*SPEED}, {C5, 250*SPEED}, {D5, 250*SPEED}, {B4, 750*SPEED},
+    {C5, 750*SPEED/1.5}, {G4, 250*SPEED/1.5}, {Pause, 500*SPEED/1.5}, {E4, 750*SPEED/1.5},
+    {A4, 500*SPEED/1.5}, {B4, 500*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {A4, 500*SPEED/1.5},
+    {G4, 375*SPEED/1.5}, {E5, 375*SPEED/1.5}, {G5, 375*SPEED/1.5}, {A5, 500*SPEED/1.5}, {F5, 250*SPEED/1.5}, {G5, 250*SPEED/1.5},
+    {Pause, 250*SPEED/1.5}, {E5, 500*SPEED/1.5}, {C5, 250*SPEED/1.5}, {D5, 250*SPEED/1.5}, {B4, 750*SPEED/1.5},
 
-    {Pause, 500*SPEED}, {G5, 250*SPEED}, {FS5, 250*SPEED}, {F5, 250*SPEED}, {DS5, 500*SPEED}, {E5, 250*SPEED},
-    {Pause, 250*SPEED}, {GS4, 250*SPEED}, {A4, 250*SPEED}, {C4, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {C5, 250*SPEED}, {D5, 250*SPEED},  
-    {Pause, 500*SPEED}, {DS5, 500*SPEED}, {Pause, 250*SPEED}, {D5, 750*SPEED},
-    {C5, 1000*SPEED}, {Pause, 1000*SPEED}
+    {Pause, 500*SPEED/1.5}, {G5, 250*SPEED/1.5}, {FS5, 250*SPEED/1.5}, {F5, 250*SPEED/1.5}, {DS5, 500*SPEED/1.5}, {E5, 250*SPEED/1.5},
+    {Pause, 250*SPEED/1.5}, {GS4, 250*SPEED/1.5}, {A4, 250*SPEED/1.5}, {C4, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {A4, 250*SPEED/1.5}, {C5, 250*SPEED/1.5}, {D5, 250*SPEED/1.5},  
+    {Pause, 500*SPEED/1.5}, {DS5, 500*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {D5, 750*SPEED/1.5},
+    {C5, 1000*SPEED/1.5}, {Pause, 1000*SPEED/1.5}
 };
 
 static const buzzer_musical_score_t score_cantinaband[] = {
-    {B4, 750*SPEED}, {E5, 750*SPEED}, {B4, 750*SPEED}, {E5, 750*SPEED},
-    {B4, 250*SPEED}, {E5, 750*SPEED}, {B4, 250*SPEED}, {Pause, 250*SPEED}, {AS4, 250*SPEED}, {B4, 250*SPEED},
-    {B4, 250*SPEED}, {AS4, 250*SPEED}, {B4, 250*SPEED}, {A4, 250*SPEED}, {Pause, 250*SPEED}, {GS4, 250*SPEED}, {A4, 250*SPEED}, {G4, 250*SPEED},
-    {G4, 500*SPEED}, {E4, 1500*SPEED},
+    {B4, 750*SPEED/1.5}, {E5, 750*SPEED/1.5}, {B4, 750*SPEED/1.5}, {E5, 750*SPEED/1.5},
+    {B4, 250*SPEED/1.5}, {E5, 750*SPEED/1.5}, {B4, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {B4, 250*SPEED/1.5},
+    {B4, 250*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {B4, 250*SPEED/1.5}, {A4, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {GS4, 250*SPEED/1.5}, {A4, 250*SPEED/1.5}, {G4, 250*SPEED/1.5},
+    {G4, 500*SPEED/1.5}, {E4, 1500*SPEED/1.5},
 
     {B4, 750*SPEED}, {E5, 750*SPEED}, {B4, 750*SPEED}, {E5, 750*SPEED},
-    {B4, 250*SPEED}, {E5, 750*SPEED}, {B4, 250*SPEED}, {Pause, 250*SPEED}, {AS4, 250*SPEED}, {B4, 250*SPEED},
-    {A4, 750*SPEED}, {A4, 750*SPEED}, {GS4, 250*SPEED}, {A4, 750*SPEED},
-    {D5, 250*SPEED}, {C5, 750*SPEED}, {B4, 750*SPEED}, {A4, 750*SPEED},
+    {B4, 250*SPEED/1.5}, {E5, 750*SPEED/1.5}, {B4, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {B4, 250*SPEED/1.5},
+    {A4, 750*SPEED/1.5}, {A4, 750*SPEED/1.5}, {GS4, 250*SPEED/1.5}, {A4, 750*SPEED/1.5},
+    {D5, 250*SPEED/1.5}, {C5, 750*SPEED/1.5}, {B4, 750*SPEED/1.5}, {A4, 750*SPEED/1.5},
 
-    {B4, 750*SPEED}, {E5, 750*SPEED}, {B4, 750*SPEED}, {E5, 750*SPEED},
-    {B4, 250*SPEED}, {E5, 750*SPEED}, {B4, 250*SPEED}, {Pause, 250*SPEED}, {AS4, 250*SPEED}, {B4, 250*SPEED},
-    {D5, 500*SPEED}, {D5, 750*SPEED}, {B4, 250*SPEED}, {A4, 750*SPEED},
-    {G4, 750*SPEED}, {E4, 1500*SPEED},
+    {B4, 750*SPEED/1.5}, {E5, 750*SPEED/1.5}, {B4, 750*SPEED/1.5}, {E5, 750*SPEED/1.5},
+    {B4, 250*SPEED/1.5}, {E5, 750*SPEED/1.5}, {B4, 250*SPEED/1.5}, {Pause, 250*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {B4, 250*SPEED/1.5},
+    {D5, 500*SPEED/1.5}, {D5, 750*SPEED/1.5}, {B4, 250*SPEED/1.5}, {A4, 750*SPEED/1.5},
+    {G4, 750*SPEED/1.5}, {E4, 1500*SPEED/1.5},
 
-    {E4, 1000*SPEED}, {G4, 1000*SPEED},
-    {B4, 1000*SPEED}, {D5, 1000*SPEED},
-    {F5, 750*SPEED}, {E5, 750*SPEED}, {AS4, 250*SPEED}, {AS4, 250*SPEED}, {B4, 500*SPEED}, {G4, 500*SPEED}
-};
-
-static const buzzer_musical_score_t score_zelda[] = {
-    {AS4, 1500*SPEED}, {F4, 250*SPEED}, {F4, 250*SPEED}, {AS4, 250*SPEED},
-    {GS4, 125*SPEED}, {FS4, 125*SPEED}, {GS4, 1500*SPEED},
-    {AS4, 1500*SPEED}, {FS4, 250*SPEED}, {FS4, 250*SPEED}, {AS4, 250*SPEED},
-    {A4, 125*SPEED}, {G4, 125*SPEED}, {A4, 1500*SPEED},
-    {Pause, 2000*SPEED},
-
-    {AS4, 500*SPEED}, {F4, 750*SPEED}, {AS4, 250*SPEED}, {AS4, 125*SPEED}, {C5, 125*SPEED}, {D5, 125*SPEED}, {DS5, 125*SPEED},
-    {F5, 1000*SPEED}, {F5, 250*SPEED}, {F5, 250*SPEED}, {F5, 250*SPEED}, {FS5, 125*SPEED}, {GS5, 125*SPEED},
-    {AS5, 1500*SPEED}, {AS5, 250*SPEED}, {AS5, 250*SPEED}, {GS5, 250*SPEED}, {FS5, 125*SPEED},
-    {GS5, 375*SPEED}, {FS5, 125*SPEED}, {F5, 1000*SPEED}, {F5, 500*SPEED},
-
-    {DS5, 375*SPEED}, {F5, 125*SPEED}, {FS5, 1000*SPEED}, {F5, 250*SPEED}, {DS5, 250*SPEED},
-    {CS5, 375*SPEED}, {DS5, 125*SPEED}, {F5, 1000*SPEED}, {DS5, 250*SPEED}, {CS5, 250*SPEED},
-    {C5, 375*SPEED}, {D5, 125*SPEED}, {E5, 1000*SPEED}, {G5, 250*SPEED},
-    {F5, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 125*SPEED}, {F4, 250*SPEED}, {F4, 125*SPEED}, {F4, 250*SPEED}
-};
-
-static const buzzer_musical_score_t score_nevergonnagiveyouup[] = {
-    {D5, 750*SPEED}, {E5, 750*SPEED}, {A4, 500*SPEED},
-    {E5, 750*SPEED}, {FS5, 750*SPEED}, {A5, 125*SPEED}, {G5, 125*SPEED}, {FS5, 250*SPEED},
-    {D5, 750*SPEED}, {E5, 750*SPEED}, {A4, 1000*SPEED},
-    {A4, 125*SPEED}, {A4, 125*SPEED}, {B4, 125*SPEED}, {D5, 250*SPEED}, {D5, 125*SPEED},
-
-    {D5, 750*SPEED}, {E5, 750*SPEED}, {A4, 500*SPEED},
-    {E5, 750*SPEED}, {FS5, 750*SPEED}, {A5, 125*SPEED}, {G5, 125*SPEED}, {FS5, 250*SPEED},
-    {D5, 750*SPEED}, {E5, 750*SPEED}, {A4, 1000*SPEED},
-    {A4, 125*SPEED}, {A4, 125*SPEED}, {B4, 125*SPEED}, {D5, 250*SPEED}, {D5, 125*SPEED},
-
-    {Pause, 500*SPEED}, {B4, 250*SPEED}, {CS5, 250*SPEED}, {D5, 250*SPEED}, {D5, 250*SPEED}, {E5, 250*SPEED}, {CS5, 375*SPEED},
-    {B4, 125*SPEED}, {A4, 1000*SPEED}, {Pause, 500*SPEED},
-
-    {Pause, 250*SPEED}, {B4, 250*SPEED}, {B4, 250*SPEED}, {CS5, 250*SPEED}, {D5, 250*SPEED}, {B4, 500*SPEED}, {A4, 250*SPEED},
-    {A5, 250*SPEED}, {Pause, 250*SPEED}, {A5, 250*SPEED}, {E5, 750*SPEED}, {Pause, 500*SPEED},
-    {B4, 250*SPEED}, {B4, 250*SPEED}, {CS5, 250*SPEED}, {D5, 250*SPEED}, {B4, 250*SPEED}, {D5, 250*SPEED}, {E5, 250*SPEED}, {Pause, 250*SPEED},
-
-    {Pause, 250*SPEED}, {CS5, 250*SPEED}, {B4, 250*SPEED}, {A4, 750*SPEED}, {Pause, 500*SPEED},
-    {Pause, 250*SPEED}, {B4, 250*SPEED}, {B4, 250*SPEED}, {CS5, 250*SPEED}, {D5, 250*SPEED}, {B4, 250*SPEED}, {A4, 500*SPEED},
-    {E5, 250*SPEED}, {E5, 250*SPEED}, {E5, 250*SPEED}, {FS5, 250*SPEED}, {E5, 500*SPEED}, {Pause, 500*SPEED}
+    {E4, 1000*SPEED/1.5}, {G4, 1000*SPEED/1.5},
+    {B4, 1000*SPEED/1.5}, {D5, 1000*SPEED/1.5},
+    {F5, 750*SPEED/1.5}, {E5, 750*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {AS4, 250*SPEED/1.5}, {B4, 500*SPEED/1.5}, {G4, 500*SPEED/1.5}
 };
 
 static const buzzer_musical_score_t score_HarryPotter[] = {
-    {Pause, 1000*SPEED}, {D4, 500*SPEED},
-    {G4, 750*SPEED}, {AS4, 250*SPEED}, {A4, 500*SPEED},
-    {G4, 1000*SPEED}, {D5, 500*SPEED},
-    {C5, 1500*SPEED},
-    {A4, 1500*SPEED},
-    {G4, 750*SPEED}, {AS4, 250*SPEED}, {A4, 500*SPEED},
-    {F4, 1000*SPEED}, {GS4, 500*SPEED},
-    {D4, 2000*SPEED},
-    {D4, 500*SPEED},
+    {Pause, 1000*SPEED/1.3}, {D4, 500*SPEED/1.3},
+    {G4, 750*SPEED/1.3}, {AS4, 250*SPEED/1.3}, {A4, 500*SPEED/1.3},
+    {G4, 1000*SPEED/1.3}, {D5, 500*SPEED/1.3},
+    {C5, 1500*SPEED/1.3},
+    {A4, 1500*SPEED/1.3},
+    {G4, 750*SPEED/1.3}, {AS4, 250*SPEED/1.3}, {A4, 500*SPEED/1.3},
+    {F4, 1000*SPEED/1.3}, {GS4, 500*SPEED/1.3},
+    {D4, 2000*SPEED/1.3},
+    {D4, 500*SPEED/1.3},
 
-    {G4, 750*SPEED}, {AS4, 250*SPEED}, {A4, 500*SPEED},
-    {G4, 1000*SPEED}, {D5, 500*SPEED},
-    {F5, 1000*SPEED}, {E5, 500*SPEED},
-    {DS5, 1000*SPEED}, {B4, 500*SPEED},
-    {DS5, 750*SPEED}, {D5, 250*SPEED}, {CS5, 500*SPEED},
-    {CS4, 1000*SPEED}, {B4, 500*SPEED},
-    {G4, 2000*SPEED},
-    {AS4, 500*SPEED},
+    {G4, 750*SPEED/1.3}, {AS4, 250*SPEED/1.3}, {A4, 500*SPEED/1.3},
+    {G4, 1000*SPEED/1.3}, {D5, 500*SPEED/1.3},
+    {F5, 1000*SPEED/1.3}, {E5, 500*SPEED/1.3},
+    {DS5, 1000*SPEED/1.3}, {B4, 500*SPEED/1.3},
+    {DS5, 750*SPEED/1.3}, {D5, 250*SPEED/1.3}, {CS5, 500*SPEED/1.3},
+    {CS4, 1000*SPEED/1.3}, {B4, 500*SPEED/1.3},
+    {G4, 2000*SPEED/1.3},
+    {AS4, 500*SPEED/1.3},
 
-    {D5, 1000*SPEED}, {AS4, 500*SPEED},
-    {D5, 1000*SPEED}, {AS4, 500*SPEED},
-    {DS5, 1000*SPEED}, {D5, 500*SPEED},
-    {CS5, 1000*SPEED}, {A4, 500*SPEED},
-    {AS4, 750*SPEED}, {D5, 250*SPEED}, {CS5, 500*SPEED},
-    {CS4, 1000*SPEED}, {D4, 500*SPEED},
-    {D5, 2000*SPEED},
-    {Pause, 500*SPEED}, {AS4, 500*SPEED}
+    {D5, 1000*SPEED/1.3}, {AS4, 500*SPEED/1.3},
+    {D5, 1000*SPEED/1.3}, {AS4, 500*SPEED/1.3},
+    {DS5, 1000*SPEED/1.3}, {D5, 500*SPEED/1.3},
+    {CS5, 1000*SPEED/1.3}, {A4, 500*SPEED/1.3},
+    {AS4, 750*SPEED/1.3}, {D5, 250*SPEED/1.3}, {CS5, 500*SPEED/1.3},
+    {CS4, 1000*SPEED/1.3}, {D4, 500*SPEED/1.3},
+    {D5, 2000*SPEED/1.3},
+    {Pause, 500*SPEED/1.3}, {AS4, 500*SPEED/1.3}
 };
 
 static const buzzer_musical_score_t score_ImperialMarch[] = {
-    {A4, 750*SPEED}, {A4, 750*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {F4, 250*SPEED}, {Pause, 250*SPEED},
-    {A4, 750*SPEED}, {A4, 750*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {F4, 250*SPEED}, {Pause, 250*SPEED},
-    {A4, 500*SPEED}, {A4, 500*SPEED}, {A4, 500*SPEED}, {F4, 375*SPEED}, {C5, 125*SPEED},
+    {A4, 750*SPEED/0.86}, {A4, 750*SPEED/0.86}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {F4, 250*SPEED}, {Pause, 250*SPEED},
+    {A4, 750*SPEED/0.86}, {A4, 750*SPEED/0.86}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {A4, 125*SPEED}, {F4, 250*SPEED}, {Pause, 250*SPEED},
+    {A4, 500*SPEED/0.86}, {A4, 500*SPEED/0.86}, {A4, 500*SPEED/0.86}, {F4, 375*SPEED/0.86}, {C5, 125*SPEED/0.86},
 
-    {A4, 500*SPEED}, {F4, 375*SPEED}, {C5, 125*SPEED}, {A4, 1000*SPEED},
-    {E5, 500*SPEED}, {E5, 500*SPEED}, {E5, 500*SPEED}, {F5, 375*SPEED}, {C5, 125*SPEED},
-    {A4, 500*SPEED}, {F4, 375*SPEED}, {C5, 125*SPEED}, {A4, 1000*SPEED},
+    {A4, 500*SPEED/0.86}, {F4, 375*SPEED/0.86}, {C5, 125*SPEED/0.86}, {A4, 1000*SPEED/0.86},
+    {E5, 500*SPEED/0.86}, {E5, 500*SPEED/0.86}, {E5, 500*SPEED/0.86}, {F5, 375*SPEED/0.86}, {C5, 125*SPEED/0.86},
+    {A4, 500*SPEED/0.86}, {F4, 375*SPEED/0.86}, {C5, 125*SPEED/0.86}, {A4, 1000*SPEED/0.86},
 
-    {A5, 500*SPEED}, {A4, 375*SPEED}, {A4, 125*SPEED}, {A5, 500*SPEED}, {GS5, 375*SPEED}, {G5, 125*SPEED},
-    {DS5, 125*SPEED}, {D5, 125*SPEED}, {DS5, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {DS5, 500*SPEED}, {D5, 375*SPEED}, {CS5, 125*SPEED},
+    {A5, 500*SPEED/0.86}, {A4, 375*SPEED/0.86}, {A4, 125*SPEED/0.86}, {A5, 500*SPEED/0.86}, {GS5, 375*SPEED/0.86}, {G5, 125*SPEED/0.86},
+    {DS5, 125*SPEED/0.86}, {D5, 125*SPEED/0.86}, {DS5, 250*SPEED/0.86}, {Pause, 250*SPEED/0.86}, {A4, 250*SPEED/0.86}, {DS5, 500*SPEED/0.86}, {D5, 375*SPEED/0.86}, {CS5, 125*SPEED/0.86},
 
-    {C5, 125*SPEED}, {B4, 125*SPEED}, {C5, 125*SPEED}, {Pause, 250*SPEED}, {F4, 250*SPEED}, {GS4, 500*SPEED}, {F4, 375*SPEED}, {A4, 187*SPEED},
-    {C5, 500*SPEED}, {A4, 375*SPEED}, {C5, 125*SPEED}, {E5, 1000*SPEED}
-};
-
-static const buzzer_musical_score_t score_MiiChannel[] = {
-    {FS4, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {CS5, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {Pause, 250*SPEED}, {FS4, 250*SPEED},
-    {D4, 250*SPEED}, {D4, 250*SPEED}, {D4, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED}, {Pause, 250*SPEED}, {CS4, 250*SPEED},
-    {D4, 250*SPEED}, {FS4, 250*SPEED}, {A4, 250*SPEED}, {CS5, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {Pause, 250*SPEED}, {F4, 250*SPEED},
-    {E5, 750*SPEED}, {DS5, 250*SPEED}, {D5, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED},
-
-    {GS4, 250*SPEED}, {Pause, 250*SPEED}, {CS5, 250*SPEED}, {FS4, 250*SPEED}, {Pause, 250*SPEED}, {CS5, 250*SPEED}, {Pause, 250*SPEED}, {GS4, 250*SPEED},
-    {Pause, 250*SPEED}, {CS5, 250*SPEED}, {G4, 250*SPEED}, {FS4, 250*SPEED}, {Pause, 250*SPEED}, {E4, 250*SPEED}, {Pause, 250*SPEED},
-    {E4, 250*SPEED}, {E4, 250*SPEED}, {E4, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED}, {E4, 250*SPEED}, {E4, 250*SPEED},
-    {E4, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED}, {DS4, 250*SPEED}, {D4, 250*SPEED},
-
-    {CS4, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {CS5, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {Pause, 250*SPEED}, {FS4, 250*SPEED},
-    {D4, 250*SPEED}, {D4, 250*SPEED}, {D4, 250*SPEED}, {Pause, 250*SPEED}, {E5, 250*SPEED}, {E5, 250*SPEED}, {E5, 250*SPEED}, {Pause, 250*SPEED},
-    {Pause, 250*SPEED}, {FS4, 250*SPEED}, {A4, 250*SPEED}, {CS5, 250*SPEED}, {Pause, 250*SPEED}, {A4, 250*SPEED}, {Pause, 250*SPEED}, {F4, 250*SPEED},
-    {E5, 1000*SPEED}, {D5, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED},
-
-    {B4, 250*SPEED}, {G4, 250*SPEED}, {D4, 250*SPEED}, {CS4, 500*SPEED}, {B4, 250*SPEED}, {G4, 250*SPEED}, {CS4, 250*SPEED},
-    {A4, 250*SPEED}, {FS4, 250*SPEED}, {C4, 250*SPEED}, {B3, 500*SPEED}, {F4, 250*SPEED}, {D4, 250*SPEED}, {B3, 250*SPEED},
-    {E4, 250*SPEED}, {E4, 250*SPEED}, {E4, 250*SPEED}, {Pause, 500*SPEED}, {Pause, 500*SPEED}, {AS4, 500*SPEED},
-    {CS5, 250*SPEED}, {D5, 250*SPEED}, {FS5, 250*SPEED}, {A5, 250*SPEED}, {Pause, 250*SPEED}, {Pause, 500*SPEED}
+    {C5, 125*SPEED/0.86}, {B4, 125*SPEED/0.86}, {C5, 125*SPEED/0.86}, {Pause, 250*SPEED/0.86}, {F4, 250*SPEED/0.86}, {GS4, 500*SPEED/0.86}, {F4, 375*SPEED/0.86}, {A4, 187*SPEED/0.86},
+    {C5, 500*SPEED/0.86}, {A4, 375*SPEED/0.86}, {C5, 125*SPEED/0.86}, {E5, 1000*SPEED/0.86}
 };
 
 static const buzzer_musical_score_t score_keyboardCat[] = {
-    {Pause, 2000*SPEED},
-    {C4, 500*SPEED}, {E4, 500*SPEED}, {G4, 500*SPEED}, {E4, 500*SPEED}, 
-    {C4, 500*SPEED}, {E4, 250*SPEED}, {G4, 750*SPEED}, {E4, 500*SPEED},
-    {A3, 500*SPEED}, {C4, 500*SPEED}, {E4, 500*SPEED}, {C4, 500*SPEED},
-    {A3, 500*SPEED}, {C4, 250*SPEED}, {E4, 750*SPEED}, {C4, 500*SPEED},
-    {G3, 500*SPEED}, {B3, 500*SPEED}, {D4, 500*SPEED}, {B3, 500*SPEED},
-    {G3, 500*SPEED}, {B3, 250*SPEED}, {D4, 750*SPEED}, {B3, 500*SPEED},
-
-    {G3, 500*SPEED}, {G3, 250*SPEED}, {G3, 750*SPEED}, {G3, 250*SPEED}, {G3, 500*SPEED}, 
-    {G3, 500*SPEED}, {G3, 500*SPEED}, {G3, 250*SPEED}, {G3, 500*SPEED},
-    {C4, 500*SPEED}, {E4, 500*SPEED}, {G4, 500*SPEED}, {E4, 500*SPEED}, 
-    {C4, 500*SPEED}, {E4, 250*SPEED}, {G4, 750*SPEED}, {E4, 500*SPEED},
-    {A3, 500*SPEED}, {C4, 500*SPEED}, {E4, 500*SPEED}, {C4, 500*SPEED},
-    {A3, 500*SPEED}, {C4, 250*SPEED}, {E4, 750*SPEED}, {C4, 500*SPEED},
-    {G3, 500*SPEED}, {B3, 500*SPEED}, {D4, 500*SPEED}, {B3, 500*SPEED},
-    {G3, 500*SPEED}, {B3, 250*SPEED}, {D4, 750*SPEED}, {B3, 500*SPEED},
-
-    {G3, 3000*SPEED}
+    {Pause, 2000*SPEED/1.33},
+    {C4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, {G4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, 
+    {C4, 500*SPEED/1.33}, {E4, 250*SPEED/1.33}, {G4, 750*SPEED/1.33}, {E4, 500*SPEED/1.33},
+    {A3, 500*SPEED/1.33}, {C4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, {C4, 500*SPEED/1.33},
+    {A3, 500*SPEED/1.33}, {C4, 250*SPEED/1.33}, {E4, 750*SPEED/1.33}, {C4, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33}, {B3, 500*SPEED/1.33}, {D4, 500*SPEED/1.33}, {B3, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33}, {B3, 250*SPEED/1.33}, {D4, 750*SPEED/1.33}, {B3, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33}, {G3, 250*SPEED/1.33}, {G3, 750*SPEED/1.33}, {G3, 250*SPEED/1.33}, {G3, 500*SPEED/1.33}, 
+    {G3, 500*SPEED/1.33}, {G3, 500*SPEED/1.33}, {G3, 250*SPEED/1.33}, {G3, 500*SPEED/1.33},
+    {C4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, {G4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, 
+    {C4, 500*SPEED/1.33}, {E4, 250*SPEED/1.33}, {G4, 750*SPEED/1.33}, {E4, 500*SPEED/1.33},
+    {A3, 500*SPEED/1.33}, {C4, 500*SPEED/1.33}, {E4, 500*SPEED/1.33}, {C4, 500*SPEED/1.33},
+    {A3, 500*SPEED/1.33}, {C4, 250*SPEED/1.33}, {E4, 750*SPEED/1.33}, {C4, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33}, {B3, 500*SPEED/1.33}, {D4, 500*SPEED/1.33}, {B3, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33}, {B3, 250*SPEED/1.33}, {D4, 750*SPEED/1.33}, {B3, 500*SPEED/1.33},
+    {G3, 500*SPEED/1.33},{G3, 3000*SPEED}
 };
 
 /**
@@ -339,16 +274,13 @@ static const ThemeSong available_songs[] = {
     { score_cantinaband, sizeof(score_cantinaband) / sizeof(score_cantinaband[0]), "CANTINABAND" },
     { score_ImperialMarch, sizeof(score_ImperialMarch) / sizeof(score_ImperialMarch[0]), "IMPERIALMARCH" },
     { score_mario, sizeof(score_mario) / sizeof(score_mario[0]), "MARIO" },
-    { score_zelda, sizeof(score_zelda) / sizeof(score_zelda[0]), "ZELDA" },
-    { score_nevergonnagiveyouup, sizeof(score_nevergonnagiveyouup) / sizeof(score_nevergonnagiveyouup[0]), "NeverGonnaGiveYouUP" },
     { score_HarryPotter, sizeof(score_HarryPotter) / sizeof(score_HarryPotter[0]), "HarryPotter" },
-    { score_MiiChannel, sizeof(score_MiiChannel) / sizeof(score_MiiChannel[0]), "MiiChannel" },
     { score_keyboardCat, sizeof(score_keyboardCat) / sizeof(score_keyboardCat[0]), "keyboardCat" },
     { score_silence, sizeof(score_silence) / sizeof(score_silence[0]), "SILENCE" }
 };
 
 #define NUM_AVAILABLE_SONGS (sizeof(available_songs) / sizeof(ThemeSong))
-
+    
 /* --------------------------------------------------------------------------
    Task-Funktion für wiederholtes Abspielen (mit Pause-Mechanismus)
    

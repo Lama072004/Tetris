@@ -148,6 +148,7 @@ $<TARGET_FILE:__idf_esp_hal_twai>
 $<TARGET_FILE:idf::http_parser>
 $<TARGET_FILE:idf::esp-tls>
 $<TARGET_FILE:idf::esp_adc>
+$<TARGET_FILE:idf::esp_blockdev_util>
 $<TARGET_FILE:idf::esp_hal_cam>
 $<TARGET_FILE:__idf_esp_hal_cam>
 $<TARGET_FILE:idf::esp_driver_cam>
@@ -165,7 +166,9 @@ $<TARGET_FILE:__idf_esp_hal_pcnt>
 $<TARGET_FILE:idf::esp_hal_rmt>
 $<TARGET_FILE:idf::esp_driver_rmt>
 $<TARGET_FILE:__idf_esp_hal_rmt>
+$<TARGET_FILE:idf::esp_hal_sd>
 $<TARGET_FILE:idf::sdmmc>
+$<TARGET_FILE:__idf_esp_hal_sd>
 $<TARGET_FILE:idf::esp_driver_sd_intf>
 $<TARGET_FILE:__idf_sdmmc>
 $<TARGET_FILE:idf::esp_driver_sdm>

@@ -1,4 +1,4 @@
--specs=picolibc.specs
+"-specs=D:/Mathias Lampert/Mathias Schule_Studium/FH/ELITE-Semester/EIT_3/Embedded-BuildingBlocks/Projekt/Tetris/TetrisCode/build/bootloader/specs/picolibc.specs"
 -mlongcalls
 -fno-builtin-memcpy
 -fno-builtin-memset
